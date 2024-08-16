@@ -4,7 +4,7 @@ from torch.utils.data import Dataset
 from torchvision.io import read_image
 
 class DDRDataset(Dataset):
-    def __init__(self, annotations_file="./data/DR_grading/train.txt", img_dir="./data/DR_grading/train/", transform=None, target_transform=None):
+    def __init__(self, annotations_file="/home/miqueias/DDR-dataset/DR_grading/train.txt", img_dir="/home/miqueias/DDR-dataset/DR_grading/train/", transform=None, target_transform=None):
         self.img_labels = pd.read_csv(annotations_file, delimiter=" ")
         self.img_dir = img_dir
         self.transform = transform
