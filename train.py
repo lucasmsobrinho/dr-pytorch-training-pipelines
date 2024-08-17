@@ -6,9 +6,12 @@ import data_loader.data_loaders as module_data
 import model.loss as module_loss
 import model.metric as module_metric
 import model.model as module_arch
+from data_loader.ddr_dataloader import DDRDataLoader
+from data_loader.ddr_dataset import DDRDataset
 from parse_config import ConfigParser
 from trainer import Trainer
 from utils import prepare_device
+from torchvision import transforms
 
 
 # fix random seeds for reproducibility
@@ -22,8 +25,29 @@ def main(config):
     logger = config.get_logger('train')
 
     # setup data_loader instances
-    data_loader = config.init_obj('data_loader', module_data)
-    valid_data_loader = data_loader.split_validation()
+    #data_loader = config.init_obj('data_loader', module_data)
+    #valid_data_loader = data_loader.split_validation()
+
+    
+    train_transform = valid_transform = transforms.Compose([
+        transforms.Resize((224, 224)),
+        #transforms.RandomRotation((-60,60)) # possibly not interesting
+        # other pertinent augmentations
+        transforms.Normalize(             # Normalize with ImageNet mean and std
+            mean=[0.485, 0.456, 0.406],
+            std=[0.229, 0.224, 0.225])    
+    ])
+
+    train = DDRDataset(transform=train_transform, 
+                       annotations_file="./data/DR_grading/train.txt", 
+                       img_dir="./data/DR_grading/train/")
+    
+    valid = DDRDataset(transform=valid_transform, 
+                       annotations_file="./data/DR_grading/train.txt", 
+                       img_dir="./data/DR_grading/train/")
+    
+    data_loader = DDRDataLoader(train)
+    valid_data_loader = DDRDataLoader(valid)
 
     # build model architecture, then print to console
     model = config.init_obj('arch', module_arch)
