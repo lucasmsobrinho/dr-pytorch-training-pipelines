@@ -13,4 +13,4 @@ class VGG(nn.Module):
         
     def forward(self, x):
         x = self.vgg(x)
-        return nn.softmax(x, dim=1)
+        return x

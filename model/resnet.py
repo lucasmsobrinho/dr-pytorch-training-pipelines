@@ -14,4 +14,4 @@ class ResNet(nn.Module):
     def forward(self, x):
         # Define the forward pass
         x = self.resnet(x)
-        return nn.softmax(x, dim=1)
+        return x
