@@ -1,5 +1,5 @@
 {
-    "name": "Mnist_LeNet",
+    "name": "ConvNeXt",
     "n_gpu": 0,
 
     "arch": {
@@ -22,7 +22,7 @@
             "amsgrad": true
         }
     },
-    "loss": "nll_loss",
+    "loss": "cross_entropy_loss",
     "metrics": [
         "accuracy"
     ],

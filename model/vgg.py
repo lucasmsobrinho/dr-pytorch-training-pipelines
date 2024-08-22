@@ -8,9 +8,9 @@ class VGG(nn.Module):
         # Load the pretrained VGG model
         self.vgg = models.vgg16(weights='DEFAULT')
         
-        # Replace final classifier layer
-        self.vgg.classifier[6] = nn.Linear(self.vgg.classifier[6].in_features, num_classes)
+        # Replace output dimension with number of classes
+        self.vgg.classifier[6].out_features = num_classes
         
     def forward(self, x):
         x = self.vgg(x)
-        return x
+        return nn.softmax(x, dim=1)

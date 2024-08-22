@@ -8,10 +8,10 @@ class ResNet(nn.Module):
         # Load a pretrained ResNet model
         self.resnet = torch.hub.load('pytorch/vision:v0.10.0', 'resnet50', weights='DEFAULT')
 
-        # Replace final classifier layer
-        self.resnet.fc = nn.Linear(self.resnet.fc.in_features, num_classes)
+        # Replace output dimension with number of classes
+        self.resnet.fc.out_features = num_classes
 
     def forward(self, x):
         # Define the forward pass
         x = self.resnet(x)
-        return F.log_softmax(x, dim=1)
+        return nn.softmax(x, dim=1)

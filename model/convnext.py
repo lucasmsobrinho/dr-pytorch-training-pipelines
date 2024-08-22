@@ -10,8 +10,8 @@ class ConvNeXt(nn.Module):
         self.convnext = models.convnext_base(weights='DEFAULT')
         
         # Replace final classifier layer
-        self.convnext.classifier[2] = nn.Linear(self.convnext.classifier[2].in_features, num_classes)
+        self.convnext.classifier[2].out_features = num_classes
 
     def forward(self, x):
         x = self.convnext(x)
-        return x
+        return nn.softmax(x, dim=1)
