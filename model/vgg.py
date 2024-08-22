@@ -9,8 +9,9 @@ class VGG(nn.Module):
         self.vgg = models.vgg16(weights='DEFAULT')
         
         # Replace output dimension with number of classes
-        self.vgg.classifier[6].out_features = num_classes
-        
+        in_features = self.vgg.classifier[6].in_features
+        self.vgg.classifier[6] = nn.Linear(in_features, num_classes)
+
     def forward(self, x):
         x = self.vgg(x)
         return x
