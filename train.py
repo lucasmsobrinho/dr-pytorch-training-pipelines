@@ -8,11 +8,14 @@ import model.metric as module_metric
 import model.model as module_arch
 from data_loader.ddr_dataloader import DDRDataLoader
 from data_loader.ddr_dataset import DDRDataset
+from data_loader.eyepacs_dataloader import EyePacsDataLoader
+from data_loader.eyepacs_dataset import EyePacsDataset
 from parse_config import ConfigParser
 from trainer import Trainer
 from utils import prepare_device
 from torchvision import transforms
-
+from torchinfo import summary
+from torch.utils.data import random_split
 
 # fix random seeds for reproducibility
 SEED = 123
@@ -28,7 +31,16 @@ def main(config):
     #data_loader = config.init_obj('data_loader', module_data)
     #valid_data_loader = data_loader.split_validation()
 
-    
+
+#    COMO DIVIDIR O EYEPACDATASET EM TREINO E VALIDAÇÃO
+#    dataset = EyePacsDataset()
+#    seed = 40
+#    generator = torch.Generator().manual_seed(seed)
+#    split = 0.2
+#    train_set, valid_set = random_split(dataset, [1-split, split], generator=generator)
+                
+
+
     train_transform = valid_transform = transforms.Compose([
         transforms.Resize((224, 224)),
         #transforms.RandomRotation((-60,60)) # possibly not interesting
@@ -38,13 +50,11 @@ def main(config):
             std=[0.229, 0.224, 0.225])    
     ])
 
-    train = DDRDataset(transform=train_transform, 
-                       annotations_file="./data/DR_grading/train.txt", 
-                       img_dir="./data/DR_grading/train/")
+    train = DDRDataset(transform=train_transform)
     
     valid = DDRDataset(transform=valid_transform, 
-                       annotations_file="./data/DR_grading/train.txt", 
-                       img_dir="./data/DR_grading/train/")
+                        annotations_file="/home/miqueias/DDR-dataset/DR_grading/valid.txt", 
+                        img_dir="/home/miqueias/DDR-dataset/DR_grading/valid/")
     
     data_loader = DDRDataLoader(train)
     valid_data_loader = DDRDataLoader(valid)
@@ -75,7 +85,8 @@ def main(config):
                       valid_data_loader=valid_data_loader,
                       lr_scheduler=lr_scheduler,
                       len_epoch=6)
-
+    print("summary")
+    summary(trainer.model, input_size=(16,3,224,244))
     trainer.train()
 
 
