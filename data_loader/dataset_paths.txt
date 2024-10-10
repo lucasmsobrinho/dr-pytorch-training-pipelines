@@ -1,0 +1,10 @@
+Windows Miqueias
+
+DDR train = "/Users/miqueias/Documents/DDR-dataset/DR_grading/train/"
+DDR train results = "/Users/miqueias/Documents/DDR-dataset/DR_grading/train.txt"
+
+Validation DDR = "/Users/miqueias/Documents/DDR-dataset/DR_grading/valid/"
+Validation DDR results = "/Users/miqueias/Documents/DDR-dataset/DR_grading/valid.txt"
+
+Eyepacs Train = "/Users/miqueias/Documents/Eyepacs-dataset/train/"
+Eyepacs Train Results = "/Users/miqueias/Documents/Eyepacs-dataset/train.csv"

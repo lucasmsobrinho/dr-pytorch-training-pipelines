@@ -18,6 +18,7 @@ class EyePacsDataset(Dataset):
 
     def __getitem__(self, idx):
         img_path = os.path.join(self.img_dir, self.img_names.iloc[idx])
+        img_path += ".jpeg"
         image = read_image(img_path)
         # to float;  0-255 int -> 0, 1 float
         image = image.to(dtype=torch.float32)/255
