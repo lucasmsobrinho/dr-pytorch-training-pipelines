@@ -23,15 +23,28 @@ class MnistModel(nn.Module):
         return F.log_softmax(x, dim=1)
 
 class VGG_Jabbar(nn.Module):
-    def __init__(self, num_classes=1000):
+    def __init__(self, num_classes=5, freeze_cnn=False):
         super().__init__()
         # Load the pretrained VGG model
         self.vgg = models.vgg16(weights='DEFAULT')
-        for parameter in self.vgg.features.parameters():
-            parameter.requires_grad = False
 
-        # Replace final classifier layer
-        self.vgg.classifier[6] = nn.Linear(self.vgg.classifier[6].in_features, num_classes)
+        # freeze feature extraction layers
+        if freeze_cnn:
+            for parameter in self.vgg.features.parameters():
+                parameter.requires_grad = False
+
+        # Replace final layers
+        cnn_out_features = self.vgg.classifier[6].in_features
+
+        self.vgg.classifier = nn.Sequential(
+            nn.Linear(in_features=cnn_out_features, out_features=1024, bias=True),
+            nn.ReLU(inplace=True),
+            nn.Dropout(p=0.5, inplace=False),
+            nn.Linear(in_features=1024, out_features=1024, bias=True),
+            nn.ReLU(inplace=True),
+            nn.Dropout(p=0.5, inplace=False),
+            nn.Linear(in_features=1024, out_features=num_classes, bias=True)
+        )
         
     def forward(self, x):
         x = self.vgg(x)
