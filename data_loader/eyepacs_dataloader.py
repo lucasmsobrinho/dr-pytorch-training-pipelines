@@ -3,7 +3,7 @@ from torchvision import transforms
 
 class EyePacsDataLoader(DataLoader):
     """
-    Data Loader for DR Grading Score from DDR
+    Data Loader for DR Grading Score from EyePacs
     """
     def __init__(self, dataset, batch_size=16, shuffle=True, num_workers=1, training=True):
         self.shuffle = shuffle

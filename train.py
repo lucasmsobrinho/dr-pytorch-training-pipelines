@@ -28,51 +28,21 @@ def main(config):
     logger = config.get_logger('train')
 
     # setup data_loader instances
-    #data_loader = config.init_obj('data_loader', module_data)
-    #valid_data_loader = data_loader.split_validation()
+    # data_loader = config.init_obj('data_loader', module_data)
+    # valid_data_loader = data_loader.split_validation()
 
-
-#    COMO DIVIDIR O EYEPACDATASET EM TREINO E VALIDAÇÃO
-    train_transform = valid_transform =  transforms.Compose([
-        transforms.Resize((512, 512)),
-        #transforms.RandomRotation((-60,60)) # possibly not interesting
-        # other pertinent augmentations
-        #transforms.Normalize(             # Normalize with ImageNet mean and std
-        #    mean=[0.485, 0.456, 0.406],
-        #    std=[0.229, 0.224, 0.225])    
-    ])
     dataset = EyePacsDataset(transform=train_transform,
                             annotations_file="/Users/miqueias/Documents/Eyepacs-dataset/train.csv",
                             img_dir="/Users/miqueias/Documents/Eyepacs-dataset/train/")
-    seed = 40
-    generator = torch.Generator().manual_seed(seed)
+
+    generator = torch.Generator().manual_seed(SEED)
     split = 0.2
     train_set, valid_set = random_split(dataset, [1-split, split], generator=generator)
-                
+
     batch_size=32
     data_loader = EyePacsDataLoader(dataset=train_set, batch_size=batch_size)
     valid_data_loader = EyePacsDataLoader(dataset=valid_set, batch_size=batch_size)
 
-
-#    train_transform = valid_transform = transforms.Compose([
-#        transforms.Resize((224, 224)),
-#        #transforms.RandomRotation((-60,60)) # possibly not interesting
-#        # other pertinent augmentations
-#        transforms.Normalize(             # Normalize with ImageNet mean and std
-#            mean=[0.485, 0.456, 0.406],
-#            std=[0.229, 0.224, 0.225])    
-#    ])
-#
-#    train = DDRDataset(transform=train_transform, 
-#                        annotations_file="/Users/miqueias/Documents/DDR-dataset/DR_grading/train.txt", 
-#                        img_dir="/Users/miqueias/Documents/DDR-dataset/DR_grading/train/")
-#    
-#    valid = DDRDataset(transform=valid_transform, 
-#                        annotations_file="/Users/miqueias/Documents/DDR-dataset/DR_grading/valid.txt", 
-#                        img_dir="/Users/miqueias/Documents/DDR-dataset/DR_grading/valid/")
-#    
-#    data_loader = DDRDataLoader(train, batch_size=4)
-#    valid_data_loader = DDRDataLoader(valid)
 
     # build model architecture, then print to console
     model = config.init_obj('arch', module_arch)
@@ -102,8 +72,8 @@ def main(config):
                       valid_data_loader=valid_data_loader,
                      #lr_scheduler=lr_scheduler,
                       len_epoch=len_epoch)
-    print("summary")
-    summary(trainer.model, input_size=(32,3,512,512))
+    #print("summary")
+    #summary(trainer.model, input_size=(32,3,512,512))
     trainer.train()
 
 
