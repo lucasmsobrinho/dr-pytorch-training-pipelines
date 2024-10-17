@@ -1,6 +1,6 @@
 import numpy as np
+import sklearn
 import torch
-from torchvision.utils import make_grid
 from base import BaseTrainer
 from utils import inf_loop, MetricTracker
 
@@ -81,6 +81,8 @@ class Trainer(BaseTrainer):
         self.model.eval()
         self.valid_metrics.reset()
         with torch.no_grad():
+            y_true = []
+            y_pred = []
             for batch_idx, (data, target) in enumerate(self.valid_data_loader):
                 data, target = data.to(self.device), target.to(self.device)
 
@@ -92,6 +94,11 @@ class Trainer(BaseTrainer):
                 for met in self.metric_ftns:
                     self.valid_metrics.update(met.__name__, met(output, target))
                 #self.writer.add_image('input', make_grid(data.cpu(), nrow=8, normalize=True))
+                y_true.append(target.argmax(axis=-1))
+                y_pred.append(output.argmax(axis=-1))
+            print("Confusion Matix:")
+            print(sklearn.metrics.confusion_matrix(torch.hstack(y_true), torch.hstack(y_pred)))
+
 
         # add histogram of model parameters to the tensorboard
         for name, p in self.model.named_parameters():
