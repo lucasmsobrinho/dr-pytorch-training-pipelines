@@ -34,7 +34,7 @@ class VGG_Jabbar(nn.Module):
                 parameter.requires_grad = False
 
         # Replace final layers
-        cnn_out_features = self.vgg.classifier[6].in_features
+        cnn_out_features = self.vgg.classifier[0].in_features
 
         self.vgg.classifier = nn.Sequential(
             nn.Linear(in_features=cnn_out_features, out_features=1024, bias=True),

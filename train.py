@@ -31,15 +31,17 @@ def main(config):
     # data_loader = config.init_obj('data_loader', module_data)
     # valid_data_loader = data_loader.split_validation()
 
-    dataset = EyePacsDataset(transform=train_transform,
-                            annotations_file="/Users/miqueias/Documents/Eyepacs-dataset/train.csv",
-                            img_dir="/Users/miqueias/Documents/Eyepacs-dataset/train/")
+    img_dir = config['data_loader']['args']['img_dir']
+    annotations_file = config['data_loader']['args']['annotations_file']
+    dataset = EyePacsDataset(transform=None,
+                            annotations_file=annotations_file,
+                            img_dir=img_dir)
 
     generator = torch.Generator().manual_seed(SEED)
     split = 0.2
     train_set, valid_set = random_split(dataset, [1-split, split], generator=generator)
 
-    batch_size=32
+    batch_size = 32
     data_loader = EyePacsDataLoader(dataset=train_set, batch_size=batch_size)
     valid_data_loader = EyePacsDataLoader(dataset=valid_set, batch_size=batch_size)
 
@@ -72,7 +74,7 @@ def main(config):
                       valid_data_loader=valid_data_loader,
                      #lr_scheduler=lr_scheduler,
                       len_epoch=len_epoch)
-    #print("summary")
+    print("summary")
     #summary(trainer.model, input_size=(32,3,512,512))
     trainer.train()
 
