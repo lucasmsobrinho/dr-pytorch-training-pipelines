@@ -2,20 +2,14 @@ import argparse
 import collections
 import torch
 import numpy as np
-import data_loader.data_loaders as module_data
 import model.loss as module_loss
 import model.metric as module_metric
 import model.model as module_arch
-from data_loader.ddr_dataloader import DDRDataLoader
-from data_loader.ddr_dataset import DDRDataset
-from data_loader.eyepacs_dataloader import EyePacsDataLoader
-from data_loader.eyepacs_dataset import EyePacsDataset
+import data_loader.eyepacs_dataloader as module_loader
+import data_loader.eyepacs_dataset as module_data
 from parse_config import ConfigParser
 from trainer import Trainer
 from utils import prepare_device
-from torchvision import transforms
-from torchinfo import summary
-from torch.utils.data import random_split
 
 # fix random seeds for reproducibility
 SEED = 123
@@ -28,24 +22,15 @@ def main(config):
     logger = config.get_logger('train')
 
     # setup data_loader instances
-    # data_loader = config.init_obj('data_loader', module_data)
-    # valid_data_loader = data_loader.split_validation()
+    preprocess = None # if needed can be initialized from config file
+    augmentation = None # if needed can be initialized from config file
 
-    img_dir = config['data_loader']['args']['img_dir']
-    annotations_file = config['data_loader']['args']['annotations_file']
-    dataset = EyePacsDataset(transform=None,
-                            annotations_file=annotations_file,
-                            img_dir=img_dir)
+    # preferable, because training time augmentation shouldn't be applied to valid_set
+    train_set = config.init_obj('train_set', module_data, transform=augmentation)
+    valid_set = config.init_obj('valid_set', module_data, transform=preprocess)
 
-    generator = torch.Generator().manual_seed(SEED)
-    split = 0.2
-    train_set, valid_set = random_split(dataset, [1-split, split], generator=generator)
-
-    batch_size = 32
-    num_workers = 2
-    data_loader = EyePacsDataLoader(dataset=train_set, batch_size=batch_size, num_workers=num_workers)
-    valid_data_loader = EyePacsDataLoader(dataset=valid_set, batch_size=batch_size, num_workers=num_workers)
-
+    data_loader = config.init_obj('data_loader', module_loader, dataset=train_set)
+    valid_data_loader = config.init_obj('data_loader', module_loader, dataset=valid_set)
 
     # build model architecture, then print to console
     model = config.init_obj('arch', module_arch)
@@ -64,19 +49,14 @@ def main(config):
     # build optimizer, learning rate scheduler. delete every lines containing lr_scheduler for disabling scheduler
     trainable_params = filter(lambda p: p.requires_grad, model.parameters())
     optimizer = config.init_obj('optimizer', torch.optim, trainable_params)
-    #lr_scheduler = config.init_obj('lr_scheduler', torch.optim.lr_scheduler, optimizer)
+    lr_scheduler = config.init_obj('lr_scheduler', torch.optim.lr_scheduler, optimizer)
 
-    len_epoch = len(train_set)//batch_size
-    print(f"len_epoch is {len_epoch}")
     trainer = Trainer(model, criterion, metrics, optimizer,
                       config=config,
                       device=device,
                       data_loader=data_loader,
                       valid_data_loader=valid_data_loader,
-                     #lr_scheduler=lr_scheduler,
-                      len_epoch=len_epoch)
-    print("summary")
-    #summary(trainer.model, input_size=(32,3,512,512))
+                      lr_scheduler=lr_scheduler)
     trainer.train()
 
 

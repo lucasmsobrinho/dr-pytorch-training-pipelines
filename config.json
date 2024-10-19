@@ -7,19 +7,34 @@
         "args": {
             "num_classes": 5,
             "freeze_cnn": false,
-	    "pretrained": true
+	        "pretrained": true
         }
     },
-    "data_loader": {
-        "type": "DDRDataLoader",
-        "args":{
-            "batch_size": 32,
-            "shuffle": true,
-            "num_workers": 4,
+
+    "train_set": {
+        "type": "EyePacsDataset",
+        "args": {
             "annotations_file": "../scratch/trainAugLabels.csv",
             "img_dir": "../scratch/train_proc/"
         }
     },
+    "valid_set": {
+        "type": "EyePacsDataset",
+        "args": {
+            "annotations_file": "../scratch/validAugLabels.csv",
+            "img_dir": "../scratch/train_proc/"
+        }
+    },
+
+    "data_loader": {
+        "type": "EyePacsDataLoader",
+        "args":{
+            "batch_size": 32,
+            "shuffle": true,
+            "num_workers": 4
+        }
+    },
+
     "optimizer": {
         "type": "RAdam",
         "args":{
@@ -35,18 +50,18 @@
         "args": {
             "mode": "min",
             "factor": 0.1,
-	    "patience": 2
+	        "patience": 3
         }
     },
     "trainer": {
         "epochs": 300,
 
         "save_dir": "saved/",
-        "save_period": 5, 
+        "save_period": 3, 
         "verbosity": 2,
         
         "monitor": "min val_loss",
-        "early_stop": 10,
+        "early_stop": 6,
 
         "tensorboard": true
     }

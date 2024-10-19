@@ -27,8 +27,8 @@ class Trainer(BaseTrainer):
         self.lr_scheduler = lr_scheduler
         self.log_step = int(np.sqrt(data_loader.batch_size))
 
-        self.train_metrics = MetricTracker('loss', *[m.__name__ for m in self.metric_ftns], writer=self.writer)
-        self.valid_metrics = MetricTracker('loss', *[m.__name__ for m in self.metric_ftns], writer=self.writer)
+        self.train_metrics = MetricTracker('loss', 'lr', *[m.__name__ for m in self.metric_ftns], writer=self.writer)
+        self.valid_metrics = MetricTracker('loss', 'lr', *[m.__name__ for m in self.metric_ftns], writer=self.writer)
 
     def _train_epoch(self, epoch):
         """
@@ -47,8 +47,15 @@ class Trainer(BaseTrainer):
             loss.backward()
             self.optimizer.step()
 
+            if self.lr_scheduler is not None:
+                self.train_metrics.update('lr', self.lr_scheduler.get_last_lr())
+                if self.lr_scheduler.__name__ in ["CyclicLR"]:
+                    self.lr_scheduler.step()
+
+
             self.writer.set_step((epoch - 1) * self.len_epoch + batch_idx)
             self.train_metrics.update('loss', loss.item())
+            
             for met in self.metric_ftns:
                 self.train_metrics.update(met.__name__, met(output, target))
 
@@ -68,8 +75,11 @@ class Trainer(BaseTrainer):
             log.update(**{'val_'+k : v for k, v in val_log.items()})
 
         if self.lr_scheduler is not None:
+            #log.update(self.lr_scheduler.last)
             if self.lr_scheduler.__name__ in ["ReduceLROnPlateau"]:
                 self.lr_scheduler.step(val_log['loss'])
+            elif self.lr_scheduler.__name__ in ["CyclicLR"]:
+                pass                
             else:
                 self.lr_scheduler.step()
 
