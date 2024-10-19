@@ -94,10 +94,6 @@ class Trainer(BaseTrainer):
                 for met in self.metric_ftns:
                     self.valid_metrics.update(met.__name__, met(output, target))
                 #self.writer.add_image('input', make_grid(data.cpu(), nrow=8, normalize=True))
-                y_true.append(target.argmax(axis=-1))
-                y_pred.append(output.argmax(axis=-1))
-            print("Confusion Matix:")
-            print(sklearn.metrics.confusion_matrix(torch.hstack(y_true), torch.hstack(y_pred)))
 
 
         # add histogram of model parameters to the tensorboard

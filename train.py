@@ -42,8 +42,9 @@ def main(config):
     train_set, valid_set = random_split(dataset, [1-split, split], generator=generator)
 
     batch_size = 32
-    data_loader = EyePacsDataLoader(dataset=train_set, batch_size=batch_size)
-    valid_data_loader = EyePacsDataLoader(dataset=valid_set, batch_size=batch_size)
+    num_workers = 2
+    data_loader = EyePacsDataLoader(dataset=train_set, batch_size=batch_size, num_workers=num_workers)
+    valid_data_loader = EyePacsDataLoader(dataset=valid_set, batch_size=batch_size, num_workers=num_workers)
 
 
     # build model architecture, then print to console
