@@ -48,7 +48,6 @@ class Trainer(BaseTrainer):
             self.optimizer.step()
 
             if self.lr_scheduler is not None:
-                self.train_metrics.update('lr', self.lr_scheduler.get_last_lr())
                 if self.lr_scheduler.__name__ in ["CyclicLR"]:
                     self.lr_scheduler.step()
 
@@ -56,6 +55,9 @@ class Trainer(BaseTrainer):
             self.writer.set_step((epoch - 1) * self.len_epoch + batch_idx)
             self.train_metrics.update('loss', loss.item())
             
+            if self.lr_scheduler is not None:
+                self.train_metrics.update('lr', self.lr_scheduler.get_last_lr())
+
             for met in self.metric_ftns:
                 self.train_metrics.update(met.__name__, met(output, target))
 
