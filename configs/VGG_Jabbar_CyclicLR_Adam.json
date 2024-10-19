@@ -1,0 +1,69 @@
+{
+    "name": "VGG_Jabbar_CyclicLR_Adam",
+    "n_gpu": 1,
+
+    "arch": {
+        "type": "VGG_Jabbar",
+        "args": {
+            "num_classes": 5,
+            "freeze_cnn": false,
+	        "pretrained": true
+        }
+    },
+
+    "train_set": {
+        "type": "EyePacsDataset",
+        "args": {
+            "annotations_file": "../scratch/train_aug_labels_stratified.csv",
+            "img_dir": "../scratch/train256/"
+        }
+    },
+    "valid_set": {
+        "type": "EyePacsDataset",
+        "args": {
+            "annotations_file": "../scratch/train_aug_labels_stratified.csv",
+            "img_dir": "../scratch/train256/"
+        }
+    },
+
+    "data_loader": {
+        "type": "EyePacsDataLoader",
+        "args":{
+            "batch_size": 32,
+            "shuffle": true,
+            "num_workers": 4
+        }
+    },
+
+    "optimizer": {
+        "type": "Adam",
+        "args":{
+            "lr": 0.0001
+        }
+    },
+    "loss": "cross_entropy_loss",
+    "metrics": [
+        "accuracy"
+    ],
+    "lr_scheduler": {
+        "type": "CyclicLR",
+        "args": {
+            "base_lr": 0.0001,
+            "max_lr": 0.01,
+            "step_size_up": 10000,
+            "step_size_down": 10000
+        }
+    },
+    "trainer": {
+        "epochs": 50,
+
+        "save_dir": "saved/",
+        "save_period": 5, 
+        "verbosity": 2,
+
+        "monitor": "min val_loss",
+        "early_stop": 10,
+
+        "tensorboard": true
+    }
+}
