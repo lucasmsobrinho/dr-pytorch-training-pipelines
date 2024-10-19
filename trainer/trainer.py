@@ -68,7 +68,11 @@ class Trainer(BaseTrainer):
             log.update(**{'val_'+k : v for k, v in val_log.items()})
 
         if self.lr_scheduler is not None:
-            self.lr_scheduler.step()
+            if self.lr_scheduler.__name__ in ["ReduceLROnPlateau"]:
+                self.lr_scheduler.step(val_log['loss'])
+            else:
+                self.lr_scheduler.step()
+
         return log
 
     def _valid_epoch(self, epoch):
@@ -81,8 +85,6 @@ class Trainer(BaseTrainer):
         self.model.eval()
         self.valid_metrics.reset()
         with torch.no_grad():
-            y_true = []
-            y_pred = []
             for batch_idx, (data, target) in enumerate(self.valid_data_loader):
                 data, target = data.to(self.device), target.to(self.device)
 
