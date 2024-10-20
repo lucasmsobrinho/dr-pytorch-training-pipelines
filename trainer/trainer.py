@@ -56,7 +56,7 @@ class Trainer(BaseTrainer):
             self.train_metrics.update('loss', loss.item())
             
             if self.lr_scheduler is not None:
-                self.train_metrics.update('lr', self.lr_scheduler.get_last_lr())
+                self.train_metrics.update('lr', self.lr_scheduler.get_last_lr()[-1])
 
             for met in self.metric_ftns:
                 self.train_metrics.update(met.__name__, met(output, target))
