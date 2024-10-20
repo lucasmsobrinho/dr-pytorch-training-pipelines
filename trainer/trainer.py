@@ -48,7 +48,7 @@ class Trainer(BaseTrainer):
             self.optimizer.step()
 
             if self.lr_scheduler is not None:
-                if self.lr_scheduler.__name__ in ["CyclicLR"]:
+                if type(self.lr_scheduler).__name__ in ["CyclicLR"]:
                     self.lr_scheduler.step()
 
 
@@ -78,9 +78,9 @@ class Trainer(BaseTrainer):
 
         if self.lr_scheduler is not None:
             #log.update(self.lr_scheduler.last)
-            if self.lr_scheduler.__name__ in ["ReduceLROnPlateau"]:
+            if type(self.lr_scheduler.__name__) in ["ReduceLROnPlateau"]:
                 self.lr_scheduler.step(val_log['loss'])
-            elif self.lr_scheduler.__name__ in ["CyclicLR"]:
+            elif type(self.lr_scheduler.__name__) in ["CyclicLR"]:
                 pass                
             else:
                 self.lr_scheduler.step()
