@@ -15,7 +15,7 @@ def main(config):
     # setup data_loader instances
     preprocess = None # if needed can be initialized from config file
 
-    test_set = config.init_obj('test_set', module_data, transform=preprocess, shuffle=False, training=False)
+    test_set = config.init_obj('test_set', module_data, transform=preprocess)
     data_loader = config.init_obj('data_loader', module_loader, dataset=test_set)
 
     # build model architecture
