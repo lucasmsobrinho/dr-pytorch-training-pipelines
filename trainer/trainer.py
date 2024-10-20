@@ -56,7 +56,7 @@ class Trainer(BaseTrainer):
             self.train_metrics.update('loss', loss.item())
             
             if self.lr_scheduler is not None:
-                self.train_metrics.update('lr', self.lr_scheduler.get_last_lr())
+                self.train_metrics.update('lr', self.lr_scheduler.get_last_lr()[0])
 
             for met in self.metric_ftns:
                 self.train_metrics.update(met.__name__, met(output, target))
@@ -77,7 +77,6 @@ class Trainer(BaseTrainer):
             log.update(**{'val_'+k : v for k, v in val_log.items()})
 
         if self.lr_scheduler is not None:
-            #log.update(self.lr_scheduler.last)
             if type(self.lr_scheduler).__name__ in ["ReduceLROnPlateau"]:
                 self.lr_scheduler.step(val_log['loss'])
             elif type(self.lr_scheduler).__name__ in ["CyclicLR"]:
