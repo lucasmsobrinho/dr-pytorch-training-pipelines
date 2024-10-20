@@ -25,6 +25,13 @@
             "img_dir": "../scratch/train256/"
         }
     },
+    "test_set": {
+        "type": "EyePacsDataset",
+        "args": {
+            "annotations_file": "../scratch/test_labels.csv",
+            "img_dir": "../scratch/test256/"
+        }
+    },
 
     "data_loader": {
         "type": "EyePacsDataLoader",
