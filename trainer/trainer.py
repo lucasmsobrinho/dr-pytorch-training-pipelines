@@ -61,6 +61,8 @@ class Trainer(BaseTrainer):
             for met in self.metric_ftns:
                 self.train_metrics.update(met.__name__, met(output, target))
 
+            self.train_metrics.update_confusion_matrix(output, target)
+
             if batch_idx % self.log_step == 0:
                 self.logger.debug('Train Epoch: {} {} Loss: {:.6f}'.format(
                     epoch,
@@ -70,6 +72,7 @@ class Trainer(BaseTrainer):
 
             if batch_idx == self.len_epoch:
                 break
+        self.train_metrics.get_other_metrics()
         log = self.train_metrics.result()
 
         if self.do_validation:
@@ -104,9 +107,13 @@ class Trainer(BaseTrainer):
 
                 self.writer.set_step((epoch - 1) * len(self.valid_data_loader) + batch_idx, 'valid')
                 self.valid_metrics.update('loss', loss.item())
+
+                self.valid_metrics.update_confusion_matrix(output, target)
                 for met in self.metric_ftns:
                     self.valid_metrics.update(met.__name__, met(output, target))
+                    
                 #self.writer.add_image('input', make_grid(data.cpu(), nrow=8, normalize=True))
+            self.valid_metrics.get_other_metrics()
 
 
         # add histogram of model parameters to the tensorboard

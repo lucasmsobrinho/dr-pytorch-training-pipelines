@@ -26,15 +26,15 @@
         }
     },
     "test_set": {
-        "type": "EyePacsDataset",
+        "type": "DDRDataset",
         "args": {
-            "annotations_file": "../scratch/test_labels.csv",
-            "img_dir": "../scratch/test256/"
+            "annotations_file": "/home/miqueias/DDR-dataset/DR_grading/test.txt",
+            "img_dir": "/home/miqueias/DDR-dataset/DR_grading/test"
         }
     },
 
     "data_loader": {
-        "type": "EyePacsDataLoader",
+        "type": "DDRDataLoader",
         "args":{
             "batch_size": 32,
             "shuffle": true,

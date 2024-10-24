@@ -7,15 +7,16 @@ class DDRDataLoader(BaseDataLoader):
     """
     Data Loader for DR Grading Score from DDR
     """
-    def __init__(self, batch_size=16, validation_split=0.1, shuffle=True, num_workers=1, training=True):
+    def __init__(self, dataset=None, batch_size=16, validation_split=0.1, shuffle=True, num_workers=1, training=True):
         self.shuffle = shuffle
-        
+        self.dataset = dataset
 
         centercrop224 = transforms.Compose([transforms.ToPILImage(),
                                             transforms.CenterCrop(224),
                                             transforms.ToTensor()])
 
-        self.dataset = DDRDataset(transform=centercrop224)
+        if not dataset:
+            self.dataset = DDRDataset(transform=centercrop224)
         self.n_samples = len(self.dataset)
 
         self.init_kwargs = {

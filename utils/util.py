@@ -1,6 +1,8 @@
+
 import json
 import torch
 import pandas as pd
+import numpy as np
 from pathlib import Path
 from itertools import repeat
 from collections import OrderedDict
@@ -44,9 +46,13 @@ def prepare_device(n_gpu_use):
     return device, list_ids
 
 class MetricTracker:
+    # Confusion matrix: lines represent target values and columns
+    # represent predicted values.
     def __init__(self, *keys, writer=None):
         self.writer = writer
         self._data = pd.DataFrame(index=keys, columns=['total', 'counts', 'average'])
+        self.highest_class = 1
+        self.confusion_matrix = np.zeros((2,2))
         self.reset()
 
     def reset(self):
@@ -60,6 +66,56 @@ class MetricTracker:
         self._data.counts[key] += n
         self._data.average[key] = self._data.total[key] / self._data.counts[key]
 
+    def update_confusion_matrix(self, output, target):
+        pred = torch.argmax(output, dim=1)
+        assert pred.shape[0] == len(target)
+
+        for i in range(len(target)):
+            target_class = int(target[i].item())
+            print(f"target_class is {target_class}")
+            output_class = int(pred[i].item())
+            print(f"output_class is {output_class}")
+            number = max(target_class, output_class)
+            if number > self.highest_class:
+                self.highest_class = number
+                self.enlarge_confusion_matrix(number)
+
+            self.confusion_matrix[target_class, output_class] += 1
+            
+        print(self.confusion_matrix)
+
+    def enlarge_confusion_matrix(self, number):
+        new_matrix = np.zeros((number+1,number+1))
+        old_matrix_shape = self.confusion_matrix.shape[0]
+        new_matrix[:old_matrix_shape,:old_matrix_shape] = self.confusion_matrix
+        self.confusion_matrix = new_matrix
+        print(new_matrix)
+
+    def get_other_metrics(self):
+        num_classes = self.confusion_matrix.shape[0]
+        precision = np.zeros(num_classes)
+        recall = np.zeros(num_classes)
+        for i in range(num_classes):
+            if sum(self.confusion_matrix[:,i]) != 0:
+                precision[i] = self.confusion_matrix[i, i] / sum(self.confusion_matrix[:,i])
+            if sum(self.confusion_matrix[i,:]) != 0:
+                recall[i] =  self.confusion_matrix[i, i] / sum(self.confusion_matrix[i,:])
+
+        avg_precision = sum(precision) / num_classes
+        avg_recall = sum(recall) / num_classes
+        f1_score = 2 * avg_recall * avg_precision / (avg_recall + avg_precision)
+
+        self._data.loc['precision'] = [0,0,0]
+        self._data.total['precision'] = sum(precision)            
+        self._data.counts['precision'] = num_classes
+        self._data.average['precision'] = avg_precision
+        self._data.loc['recall'] = [0,0,0]
+        self._data.total['recall'] = sum(recall)            
+        self._data.counts['recall'] = num_classes            
+        self._data.average['recall'] = avg_recall
+        self._data.loc['f1_score'] = [0,0,0]
+        self._data.average['f1_score'] = f1_score
+        
     def avg(self, key):
         return self._data.average[key]
 

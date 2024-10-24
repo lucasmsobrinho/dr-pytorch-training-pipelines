@@ -7,6 +7,17 @@ import pandas as pd
 import numpy as np
 import os
 
+def class_reduction_transform(new_number_classes):
+    target_transform=torchvision.transforms.Compose(
+                                    lambda x: class_reduction(x, new_number_classes))
+    return target_transform
+
+def class_reduction(x, new_number_classes):
+    if x > new_number_classes - 1:
+        return new_number_classes - 1
+    else:
+        return x
+
 def crop_best_square(img):
     size = min(img.shape[0], img.shape[1])
     best_x = 0

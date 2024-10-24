@@ -1,4 +1,6 @@
-Windows Miqueias
+Miqueias
+
+Windows:
 
 DDR train = "/Users/miqueias/Documents/DDR-dataset/DR_grading/train/"
 DDR train results = "/Users/miqueias/Documents/DDR-dataset/DR_grading/train.txt"
@@ -8,3 +10,7 @@ Validation DDR results = "/Users/miqueias/Documents/DDR-dataset/DR_grading/valid
 
 Eyepacs Train = "/Users/miqueias/Documents/Eyepacs-dataset/train/"
 Eyepacs Train Results = "/Users/miqueias/Documents/Eyepacs-dataset/train.csv"
+
+Linux:
+DDR test = "/home/miqueias/DDR-dataset/DR_grading/test"
+DDR test results = "/home/miqueias/DDR-dataset/DR_grading/test.txt"

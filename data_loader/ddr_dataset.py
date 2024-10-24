@@ -24,4 +24,6 @@ class DDRDataset(Dataset):
             image = self.transform(image)
         if self.target_transform:
             label = self.target_transform(label)
+        if label >= 5:
+            label = 4
         return image, label

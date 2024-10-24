@@ -83,6 +83,7 @@ class ResNet(nn.Module):
 
 class ConvNeXt(nn.Module):
     def __init__(self, num_classes=1000):
+        print(f"num_classes is {num_classes}")
         super().__init__()
         # Load a pretrained ConvNeXt base model
         self.convnext = models.convnext_base(weights='DEFAULT')
