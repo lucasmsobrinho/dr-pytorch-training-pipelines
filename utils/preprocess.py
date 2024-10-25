@@ -53,7 +53,23 @@ def get_transform(img_size=512):
     ])
     return preprocess
 
-def process(df, input_folder="./train", output_folder="./proc256", img_size=512):
+# TODO: change it to class-based.
+def process_jabbar(df, input_folder="./train", output_folder="./proc256", img_size=512):
+    transform = get_transform(img_size=img_size)
+
+    for idx, img_name in enumerate(df.name):
+        if (idx % 1000 == 0):
+            print(f"{idx}/{df.name.shape[0]}, {img_name}, {output_folder}/{img_name}.jpeg")
+
+        if(not os.path.exists(f"{output_folder}/{img_name}.jpeg")):
+            img = torchvision.io.read_image(f"{input_folder}/{img_name}.jpeg").to('cuda')
+            proc = transform(img)
+            torchvision.io.write_jpeg(proc, f"{output_folder}/{img_name}.jpeg", 100)
+
+def process_kaggle1(df, input_folder="./train", output_folder="./proc256", img_size=512):
+    # scale radius to be equal
+    # subtract average color
+    # clip images to 90% to remove "boundary effects"
     transform = get_transform(img_size=img_size)
 
     for idx, img_name in enumerate(df.name):
@@ -66,12 +82,14 @@ def process(df, input_folder="./train", output_folder="./proc256", img_size=512)
             torchvision.io.write_jpeg(proc, f"{output_folder}/{img_name}.jpeg", 100)
 
 
+
 if __name__=="__main__":
     labels_path="./trainLabels.csv"
     input_folder="./train"
     output_folder="./proc256"
     img_size = 256
     pool_size = 8
+    process = process_jabbar 
 
     df = pd.read_csv(labels_path, header=None, names=["name", "label"])
 
