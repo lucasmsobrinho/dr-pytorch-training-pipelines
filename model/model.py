@@ -7,6 +7,7 @@ from torchvision import models
 class MnistModel(nn.Module):
     def __init__(self, num_classes=10):
         super().__init__()
+        self.num_classes = num_classes
         self.conv1 = nn.Conv2d(1, 10, kernel_size=5)
         self.conv2 = nn.Conv2d(10, 20, kernel_size=5)
         self.conv2_drop = nn.Dropout2d()
@@ -25,6 +26,7 @@ class MnistModel(nn.Module):
 class VGG_Jabbar(nn.Module):
     def __init__(self, num_classes=5, freeze_cnn=False, pretrained=False):
         super().__init__()
+        self.num_classes = num_classes
         # Load the pretrained VGG model
         if pretrained:
             weights = "DEFAULT"
@@ -55,8 +57,9 @@ class VGG_Jabbar(nn.Module):
         return x
 
 class VGG(nn.Module):
-    def __init__(self, num_classes=1000):
+    def __init__(self, num_classes=1000):        
         super(VGG, self).__init__()
+        self.num_classes = num_classes
         # Load the pretrained VGG model
         self.vgg = models.vgg16(weights='DEFAULT')
         
@@ -70,6 +73,7 @@ class VGG(nn.Module):
 class ResNet(nn.Module):
     def __init__(self, num_classes=1000):
         super().__init__()
+        self.num_classes = num_classes
         # Load a pretrained ResNet model
         self.resnet = torch.hub.load('pytorch/vision:v0.10.0', 'resnet50', weights='DEFAULT')
 
@@ -83,8 +87,8 @@ class ResNet(nn.Module):
 
 class ConvNeXt(nn.Module):
     def __init__(self, num_classes=1000):
-        print(f"num_classes is {num_classes}")
         super().__init__()
+        self.num_classes = num_classes
         # Load a pretrained ConvNeXt base model
         self.convnext = models.convnext_base(weights='DEFAULT')
         

@@ -1,8 +1,9 @@
 import argparse
 import torch
 from tqdm import tqdm
-import data_loader.ddr_dataloader as module_loader
-import data_loader.ddr_dataset as module_data
+from torchvision import transforms
+import data_loader.eyepacs_dataloader as module_loader
+import data_loader.eyepacs_dataset as module_data
 import model.loss as module_loss
 import model.metric as module_metric
 import model.model as module_arch
@@ -15,9 +16,8 @@ def main(config):
     logger = config.get_logger('test')
 
     # setup data_loader instances
-    preprocess = get_transform(img_size=256) # if needed can be initialized from config file
+    preprocess = None # if needed can be initialized from config file
 
-    num_classes_trained = 5
     test_set = config.init_obj('test_set', module_data, transform=preprocess)
     data_loader = config.init_obj('data_loader', module_loader, dataset=test_set)
 
@@ -43,7 +43,8 @@ def main(config):
 
     total_loss = 0.0
     total_metrics = torch.zeros(len(metric_fns))
-    test_metrics = MetricTracker('accuracy')
+    test_metrics = MetricTracker()
+    test_metrics.init_confusion_matrix(num_classes=model.num_classes)
 
     with torch.no_grad():
         for i, (data, target) in enumerate(tqdm(data_loader)):
@@ -65,13 +66,15 @@ def main(config):
         test_metrics.get_other_metrics()
 
     test_result = test_metrics.result()
+    test_result["test_confusion_matrix"] = "\n" + str(test_metrics.confusion_matrix)
     n_samples = len(data_loader.sampler)
     log = {'loss': total_loss / n_samples}
     log.update({
         met.__name__: total_metrics[i].item() / n_samples for i, met in enumerate(metric_fns)
     })
-    log.update(**{'test_'+k : v for k, v in test_result.items()})
     logger.info(log)
+    for key, value in test_result.items():
+        logger.info('    {:15s}: {}'.format(str(key), value))
 
 
 if __name__ == '__main__':

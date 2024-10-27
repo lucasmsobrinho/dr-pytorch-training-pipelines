@@ -1,5 +1,4 @@
 import numpy as np
-import sklearn
 import torch
 from base import BaseTrainer
 from utils import inf_loop, MetricTracker
@@ -29,6 +28,8 @@ class Trainer(BaseTrainer):
 
         self.train_metrics = MetricTracker('loss', 'lr', *[m.__name__ for m in self.metric_ftns], writer=self.writer)
         self.valid_metrics = MetricTracker('loss', 'lr', *[m.__name__ for m in self.metric_ftns], writer=self.writer)
+        self.train_metrics.init_confusion_matrix(self.model.num_classes)
+        self.valid_metrics.init_confusion_matrix(self.model.num_classes)
 
     def _train_epoch(self, epoch):
         """
@@ -87,6 +88,7 @@ class Trainer(BaseTrainer):
             else:
                 self.lr_scheduler.step()
 
+        log["train_confusion_matrix"] = "\n" + str(self.train_metrics.confusion_matrix)
         return log
 
     def _valid_epoch(self, epoch):
@@ -119,7 +121,10 @@ class Trainer(BaseTrainer):
         # add histogram of model parameters to the tensorboard
         for name, p in self.model.named_parameters():
             self.writer.add_histogram(name, p, bins='auto')
-        return self.valid_metrics.result()
+
+        log = self.valid_metrics.result()
+        log["valid_confusion_matrix"] = "\n" + str(self.valid_metrics.confusion_matrix)
+        return log
 
     def _progress(self, batch_idx):
         base = '[{}/{} ({:.0f}%)]'

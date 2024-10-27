@@ -58,6 +58,9 @@ class MetricTracker:
     def reset(self):
         for col in self._data.columns:
             self._data[col].values[:] = 0
+        if self.confusion_matrix is not None:
+            num_classes = self.confusion_matrix.shape[0]
+            self.confusion_matrix = np.zeros((num_classes,num_classes))
 
     def update(self, key, value, n=1):
         if self.writer is not None:
@@ -72,24 +75,13 @@ class MetricTracker:
 
         for i in range(len(target)):
             target_class = int(target[i].item())
-            print(f"target_class is {target_class}")
             output_class = int(pred[i].item())
-            print(f"output_class is {output_class}")
-            number = max(target_class, output_class)
-            if number > self.highest_class:
-                self.highest_class = number
-                self.enlarge_confusion_matrix(number)
-
+            
             self.confusion_matrix[target_class, output_class] += 1
             
-        print(self.confusion_matrix)
 
-    def enlarge_confusion_matrix(self, number):
-        new_matrix = np.zeros((number+1,number+1))
-        old_matrix_shape = self.confusion_matrix.shape[0]
-        new_matrix[:old_matrix_shape,:old_matrix_shape] = self.confusion_matrix
-        self.confusion_matrix = new_matrix
-        print(new_matrix)
+    def init_confusion_matrix(self, num_classes):
+        self.confusion_matrix = np.zeros((num_classes,num_classes))
 
     def get_other_metrics(self):
         num_classes = self.confusion_matrix.shape[0]
@@ -103,7 +95,10 @@ class MetricTracker:
 
         avg_precision = sum(precision) / num_classes
         avg_recall = sum(recall) / num_classes
-        f1_score = 2 * avg_recall * avg_precision / (avg_recall + avg_precision)
+        if avg_precision == avg_recall == 0:
+            f1_score = 0
+        else:
+            f1_score = 2 * avg_recall * avg_precision / (avg_recall + avg_precision)
 
         self._data.loc['precision'] = [0,0,0]
         self._data.total['precision'] = sum(precision)            
