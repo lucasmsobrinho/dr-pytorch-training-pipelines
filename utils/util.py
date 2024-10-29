@@ -1,3 +1,5 @@
+import warnings
+warnings.simplefilter(action='ignore', category=FutureWarning)
 
 import json
 import torch
@@ -101,15 +103,15 @@ class MetricTracker:
             f1_score = 2 * avg_recall * avg_precision / (avg_recall + avg_precision)
 
         self._data.loc['precision'] = [0,0,0]
-        self._data.total['precision'] = sum(precision)            
-        self._data.counts['precision'] = num_classes
-        self._data.average['precision'] = avg_precision
+        self._data.loc['precision', 'total'] = sum(precision)            
+        self._data.loc['precision', 'counts'] = num_classes
+        self._data.loc['precision', 'average'] = avg_precision
         self._data.loc['recall'] = [0,0,0]
-        self._data.total['recall'] = sum(recall)            
-        self._data.counts['recall'] = num_classes            
-        self._data.average['recall'] = avg_recall
+        self._data.loc['recall', 'total'] = sum(recall)            
+        self._data.loc['recall', 'counts'] = num_classes            
+        self._data.loc['recall', 'average'] = avg_recall
         self._data.loc['f1_score'] = [0,0,0]
-        self._data.average['f1_score'] = f1_score
+        self._data.loc['f1_score', 'average'] = f1_score
         
     def avg(self, key):
         return self._data.average[key]

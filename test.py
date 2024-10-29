@@ -10,7 +10,7 @@ import model.model as module_arch
 from utils.util import MetricTracker
 from parse_config import ConfigParser
 from utils.preprocess import get_transform, class_reduction_transform
-
+import numpy as np
 
 def main(config):
     logger = config.get_logger('test')
@@ -67,14 +67,16 @@ def main(config):
 
     test_result = test_metrics.result()
     test_result["test_confusion_matrix"] = "\n" + str(test_metrics.confusion_matrix)
+    #test_result["test_pct_confusion_matrix"] = "\n" + str(test_metrics.confusion_matrix/(test_metrics.confusion_matrix.sum()))
     n_samples = len(data_loader.sampler)
     log = {'loss': total_loss / n_samples}
     log.update({
         met.__name__: total_metrics[i].item() / n_samples for i, met in enumerate(metric_fns)
     })
     logger.info(log)
-    for key, value in test_result.items():
-        logger.info('    {:15s}: {}'.format(str(key), value))
+    with np.printoptions(suppress=True):
+        for key, value in test_result.items():
+            logger.info('    {:15s}: {}'.format(str(key), value))
 
 
 if __name__ == '__main__':
