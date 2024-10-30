@@ -1,5 +1,5 @@
 {
-    "name": "VGG_Jabbar_CyclicLR_RAdam",
+    "name": "VGG_Jabbar_CyclicLR_SGD_no_earlystop_naive",
     "n_gpu": 1,
 
     "arch": {
@@ -14,14 +14,14 @@
     "train_set": {
         "type": "EyePacsDataset",
         "args": {
-            "annotations_file": "../scratch/train_aug_labels_stratified.csv",
+            "annotations_file": "../scratch/train_aug_labels_naive.csv",
             "img_dir": "../scratch/train256/"
         }
     },
     "valid_set": {
         "type": "EyePacsDataset",
         "args": {
-            "annotations_file": "../scratch/valid_aug_labels_stratified.csv",
+            "annotations_file": "../scratch/valid_aug_labels_naive.csv",
             "img_dir": "../scratch/train256/"
         }
     },
@@ -36,16 +36,16 @@
     "data_loader": {
         "type": "EyePacsDataLoader",
         "args":{
-            "batch_size": 32,
+            "batch_size": 64,
             "shuffle": true,
             "num_workers": 4
         }
     },
 
     "optimizer": {
-        "type": "RAdam",
+        "type": "SGD",
         "args":{
-            "lr": 0.0001
+            "lr": 0.01
         }
     },
     "loss": "categorical_cross_entropy_loss",
@@ -57,19 +57,19 @@
         "args": {
             "base_lr": 0.0001,
             "max_lr": 0.01,
-            "step_size_up": 10000,
-            "step_size_down": 10000
+            "step_size_up": 20000,
+            "step_size_down": 20000
         }
     },
     "trainer": {
-        "epochs": 50,
+        "epochs": 150,
 
         "save_dir": "saved/",
         "save_period": 5, 
         "verbosity": 2,
 
         "monitor": "min val_loss",
-        "early_stop": 10,
+        "early_stop": 150,
 
         "tensorboard": true
     }
