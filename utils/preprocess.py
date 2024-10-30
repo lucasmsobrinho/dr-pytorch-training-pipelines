@@ -8,7 +8,7 @@ import numpy as np
 import os
 
 def class_reduction_transform(new_number_classes):
-    target_transform=torchvision.transforms.Compose(
+    target_transform=transforms.Compose(
                                     lambda x: class_reduction(x, new_number_classes))
     return target_transform
 
@@ -38,6 +38,28 @@ def CLAHE(img, clip_limit=2.0, tile_grid_size=(8, 8)):
     img_clahe = clahe.apply(img)
     return img_clahe
 
+def subtract_local_avg_color(img):
+    k = 51
+    s = 256/30
+    return np.clip(0.5 + 3*(img-transforms.GaussianBlur((k,k), sigma=s)(img)), 0, 1)
+
+def mask_outer(img):
+    img_size = 256
+    base = np.zeros((img_size,img_size, 3), dtype=np.float32)
+    cv2.circle(base, 
+            center = (img_size//2, img_size//2), 
+            radius = int(0.9*img_size/2),
+            color = (1, 1, 1),
+            thickness = -1)
+    base = torch.tensor(base).permute(2,0,1)
+    return base*img + (1-base)*.5
+
+def adjust_radius(img):
+    x = img[:, img.shape[1]//2,:].sum(0)
+    r = (x > x.mean()/10).sum()//2
+    scale = 128/r
+    return transforms.functional.affine(img, scale=scale, translate=[0,0], angle=0, shear=0)
+
 def get_transform(img_size=512):
     preprocess = transforms.Compose([
         transforms.Resize((img_size, img_size), interpolation=transforms.InterpolationMode.BICUBIC),
@@ -46,10 +68,21 @@ def get_transform(img_size=512):
         transforms.Lambda(CLAHE), # CLAHE
         transforms.ToTensor(),
         transforms.Lambda(lambda x: x.to('cuda')),
-        transforms.GaussianBlur((5,5), sigma=0.1),
+        transforms.GaussianBlur((5,5)),
         transforms.ConvertImageDtype(torch.uint8),
         transforms.Lambda(lambda x: x.repeat(3,1,1)),
         transforms.Lambda(lambda x: x.to('cpu')),
+    ])
+    return preprocess
+
+def get_transform_kaggle1(img_size=256):
+    preprocess = transforms.Compose([
+        transforms.ConvertImageDtype(torch.float32),
+        transforms.Lambda(adjust_radius),
+        transforms.CenterCrop(img_size),
+        transforms.Lambda(subtract_local_avg_color),
+        transforms.Lambda(mask_outer),
+        transforms.ConvertImageDtype(torch.uint8),
     ])
     return preprocess
 
@@ -66,11 +99,11 @@ def process_jabbar(df, input_folder="./train", output_folder="./proc256", img_si
             proc = transform(img)
             torchvision.io.write_jpeg(proc, f"{output_folder}/{img_name}.jpeg", 100)
 
-def process_kaggle1(df, input_folder="./train", output_folder="./proc256", img_size=512):
+def process_kaggle(df, input_folder="./train", output_folder="./kaggle256", img_size=256):
     # scale radius to be equal
     # subtract average color
     # clip images to 90% to remove "boundary effects"
-    transform = get_transform(img_size=img_size)
+    transform = get_transform_kaggle(img_size=img_size)
 
     for idx, img_name in enumerate(df.name):
         if (idx % 1000 == 0):
@@ -82,14 +115,13 @@ def process_kaggle1(df, input_folder="./train", output_folder="./proc256", img_s
             torchvision.io.write_jpeg(proc, f"{output_folder}/{img_name}.jpeg", 100)
 
 
-
 if __name__=="__main__":
-    labels_path="./trainLabels.csv"
-    input_folder="./train"
-    output_folder="./proc256"
+    labels_path="./sample.csv"
+    input_folder="./sample"
+    output_folder="./kaggle256"
     img_size = 256
     pool_size = 8
-    process = process_jabbar 
+    process = process_kaggle
 
     df = pd.read_csv(labels_path, header=None, names=["name", "label"])
 
