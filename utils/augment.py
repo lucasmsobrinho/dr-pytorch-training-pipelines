@@ -5,6 +5,7 @@ from torchvision import transforms
 from torch import nn
 import pandas as pd
 import numpy as np
+import cv2 
 
 class CustomCrop(nn.Module):
     def __init__(self, min_size, max_size):
@@ -43,36 +44,62 @@ classes = {
     4: {'name': 'PDR', 'count': 708, 'n_operations': 36}
 }
 
+def mask_outer(img):
+    img_size = 256
+    base = np.zeros((img_size,img_size, 3), dtype=np.float32)
+    cv2.circle(base, 
+            center = (img_size//2, img_size//2), 
+            radius = int(0.9*img_size/2),
+            color = (1, 1, 1),
+            thickness = -1)
+    base = torch.tensor(base).permute(2,0,1).to('cuda')
+    return base*img + (1-base)*.5
+
 augmentation = transforms.Compose([
     CustomCrop(min_size=0.6, max_size=0.75),
     transforms.RandomHorizontalFlip(p=0.5),
     transforms.RandomVerticalFlip(p=0.5),
-    transforms.RandomAffine(degrees=0, translate=(30/512, 30/512)),
+    transforms.RandomAffine(degrees=0, translate=(30/256, 30/256)),
     transforms.RandomRotation(degrees=360),
     transforms.RandomAffine(degrees=0, shear=18),
-    transforms.RandomResizedCrop(size=512, scale=(0.7, 1.3)),
+    transforms.RandomResizedCrop(size=256, scale=(0.7, 1.3)),
     #GST(),
     #Krizhevsky(),
-    transforms.ConvertImageDtype(torch.uint8)],
+    transforms.ConvertImageDtype(torch.uint8),
     transforms.Lambda(lambda x: x.to('cpu')),
-)
+])
 
-def augment(df, input_folder="./proc256", output_folder="./proc256"):
+
+augmentation = transforms.Compose([
+    transforms.RandomHorizontalFlip(p=0.5),
+    transforms.RandomVerticalFlip(p=0.5),
+    transforms.RandomRotation(degrees=360),
+    transforms.Lambda(mask_outer),
+    #transforms.RandomAffine(degrees=0, shear=18),
+    transforms.ConvertImageDtype(torch.uint8),
+    transforms.Lambda(lambda x: x.to('cpu')),
+])
+
+
+def augment(df, input_folder="./kaggle256", output_folder="./kaggle256"):
      for target in classes:
         subdf = df[df.label==target].name
         n_operations = classes[target]["n_operations"]
         for operation in range(n_operations):
+            if operation%1000 == 0:
+                print(f"{operation}/{n_operations}")
             for img_name in subdf:
                 out_name = f"{img_name}_aug_{operation}"
                 img = torchvision.io.read_image(f"{input_folder}/{img_name}.jpeg").to('cuda')
                 aug = augmentation(img)
                 torchvision.io.write_jpeg(aug, f"{output_folder}/{out_name}.jpeg", 100)
 
+
 if __name__=="__main__":
     df = pd.read_csv("trainLabels.csv", header=None, names=["name", "label"])
     df = df.sample(frac=1)
-    input_folder = "./proc256"
-    output_folder = "./proc256"
+    input_folder = "./kaggle256"
+    output_folder = "./kaggle256"
     pool_size = 8
 
     new_imgs = {'name':[], 'label':[]}
@@ -99,4 +126,5 @@ if __name__=="__main__":
 
     augs = pd.DataFrame(new_imgs)
     augs = pd.concat([df, augs])
-    augs.to_csv('./train_aug_labels.csv', header=False, index=False)
+    augs.to_csv('./kaggle_aug_labels.csv', header=False, index=False)
+
