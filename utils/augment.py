@@ -71,11 +71,11 @@ augmentation = transforms.Compose([
 
 
 augmentation = transforms.Compose([
+    transforms.ConvertImageDtype(torch.float32),
     transforms.RandomHorizontalFlip(p=0.5),
     transforms.RandomVerticalFlip(p=0.5),
     transforms.RandomRotation(degrees=360),
     transforms.Lambda(mask_outer),
-    #transforms.RandomAffine(degrees=0, shear=18),
     transforms.ConvertImageDtype(torch.uint8),
     transforms.Lambda(lambda x: x.to('cpu')),
 ])
