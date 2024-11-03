@@ -24,7 +24,7 @@ class MnistModel(nn.Module):
         return F.log_softmax(x, dim=1)
 
 class VGG_Jabbar(nn.Module):
-    def __init__(self, num_classes=5, freeze_cnn=False, pretrained=False):
+    def __init__(self, num_classes=5, bn=True, freeze_cnn=False, pretrained=False):
         super().__init__()
         self.num_classes = num_classes
         # Load the pretrained VGG model
@@ -32,7 +32,11 @@ class VGG_Jabbar(nn.Module):
             weights = "DEFAULT"
         else:
             weights = None
-        self.vgg = models.vgg16(weights=None)
+        
+        if bn:
+            self.vgg = models.vgg16_bn(weights=None)
+        else:
+            self.vgg = models.vgg16(weights=None)
 
         # freeze feature extraction layers
         if freeze_cnn:
