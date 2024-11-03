@@ -2,6 +2,7 @@ import numpy as np
 import torch
 from base import BaseTrainer
 from utils import inf_loop, MetricTracker
+from torchvision.utils import make_grid
 
 
 class Trainer(BaseTrainer):
@@ -44,6 +45,10 @@ class Trainer(BaseTrainer):
             data, target = data.to(self.device), target.to(self.device)
             self.optimizer.zero_grad()
             output = self.model(data)
+
+            if hasattr(torch.cuda, 'empty_cache'):
+                    torch.cuda.empty_cache()
+
             loss = self.criterion(output, target)
             loss.backward()
             self.optimizer.step()
@@ -51,7 +56,6 @@ class Trainer(BaseTrainer):
             if self.lr_scheduler is not None:
                 if type(self.lr_scheduler).__name__ in ["CyclicLR"]:
                     self.lr_scheduler.step()
-
 
             self.writer.set_step((epoch - 1) * self.len_epoch + batch_idx)
             self.train_metrics.update('loss', loss.item())
@@ -69,7 +73,7 @@ class Trainer(BaseTrainer):
                     epoch,
                     self._progress(batch_idx),
                     loss.item()))
-                #self.writer.add_image('input', make_grid(data.cpu(), nrow=8, normalize=True))
+                self.writer.add_image('input', make_grid(data.cpu(), nrow=8, normalize=True))
 
             if batch_idx == self.len_epoch:
                 break

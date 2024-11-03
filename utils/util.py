@@ -62,7 +62,7 @@ class MetricTracker:
             self._data[col].values[:] = 0
         if self.confusion_matrix is not None:
             num_classes = self.confusion_matrix.shape[0]
-            self.confusion_matrix = np.zeros((num_classes,num_classes))
+            self.confusion_matrix = np.zeros((num_classes,num_classes), dtype=np.uint64)
 
     def update(self, key, value, n=1):
         if self.writer is not None:
@@ -83,7 +83,7 @@ class MetricTracker:
             
 
     def init_confusion_matrix(self, num_classes):
-        self.confusion_matrix = np.zeros((num_classes,num_classes))
+        self.confusion_matrix = np.zeros((num_classes,num_classes), dtype=np.uint64)
 
     def get_other_metrics(self):
         num_classes = self.confusion_matrix.shape[0]

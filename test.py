@@ -2,21 +2,24 @@ import argparse
 import torch
 from tqdm import tqdm
 from torchvision import transforms
-import data_loader.eyepacs_dataloader as module_loader
-import data_loader.eyepacs_dataset as module_data
+import data_loader.data_loader as module_loader
+import data_loader.data_loader as module_data
 import model.loss as module_loss
 import model.metric as module_metric
 import model.model as module_arch
 from utils.util import MetricTracker
 from parse_config import ConfigParser
-from utils.preprocess import get_transform, class_reduction_transform
 import numpy as np
 
 def main(config):
     logger = config.get_logger('test')
 
     # setup data_loader instances
-    preprocess = None # if needed can be initialized from config file
+    imagenet = transforms.Compose([
+            transforms.ToTensor(),
+            transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
+    ])
+    preprocess = imagenet # if needed can be initialized from config file
 
     test_set = config.init_obj('test_set', module_data, transform=preprocess)
     data_loader = config.init_obj('data_loader', module_loader, dataset=test_set)
