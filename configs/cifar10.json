@@ -1,0 +1,76 @@
+{
+    "name": "VGG_BN_ROP_SGD_1e-2_CIFAR10",
+    "n_gpu": 1,
+
+    "arch": {
+        "type": "VGG_Jabbar",
+        "args": {
+            "num_classes": 10,
+            "freeze_cnn": false,
+            "pretrained": true
+        }
+    },
+
+    "train_set": {
+        "type": "CIFAR10Dataset",
+        "args": {
+            "train": true,
+            "download": true
+        }
+    },
+    "valid_set": {
+        "type": "CIFAR10Dataset",
+        "args": {
+            "train": false,
+            "download": true
+        }
+    },
+    "test_set": {
+        "type": "CIFAR10Dataset",
+        "args": {
+            "train": false,
+            "download": true
+        }
+    },
+    "data_loader": {
+        "type": "CIFAR10DataLoader",
+        "args":{
+            "batch_size": 512,
+            "shuffle": true,
+            "validation_split": 0.2,
+            "num_workers": 8
+        }
+    },
+    "optimizer": {
+        "type": "SGD",
+        "args":{
+            "lr": 0.01,
+            "momentum": 0.9,
+            "weight_decay": 0.0005
+        }
+    },
+    "loss": "cross_entropy_loss",
+    "metrics": [
+        "accuracy"
+    ],
+    "lr_scheduler": {
+        "type": "ReduceLROnPlateau",
+        "args": {
+            "factor":0.90,
+            "patience": 3,
+            "min_lr": 0.000001
+        }
+    },
+    "trainer": {
+        "epochs": 100,
+
+        "save_dir": "saved/",
+        "save_period": 5,
+        "verbosity": 2,
+
+        "monitor": "min val_loss",
+        "early_stop": 30,
+
+        "tensorboard": true
+    }
+}
