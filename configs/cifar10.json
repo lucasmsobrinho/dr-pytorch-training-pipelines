@@ -7,8 +7,10 @@
         "args": {
             "num_classes": 10,
             "freeze_cnn": false,
+            "pretrained": true,
             "bn": true,
-            "pretrained": true
+            "hidden_size": 512,
+            "p_dropout": 0.2
         }
     },
 

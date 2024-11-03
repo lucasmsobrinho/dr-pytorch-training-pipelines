@@ -24,19 +24,14 @@ class MnistModel(nn.Module):
         return F.log_softmax(x, dim=1)
 
 class VGG_Jabbar(nn.Module):
-    def __init__(self, num_classes=5, bn=True, freeze_cnn=False, pretrained=False):
+    def __init__(self, num_classes=5, bn=True, freeze_cnn=False, pretrained=False, hidden_size=1024, p_dropout=0.5):
         super().__init__()
         self.num_classes = num_classes
-        # Load the pretrained VGG model
-        if pretrained:
-            weights = "DEFAULT"
-        else:
-            weights = None
-        
-        if bn:
-            self.vgg = models.vgg16_bn(weights=None)
-        else:
-            self.vgg = models.vgg16(weights=None)
+        self.hidden_size = hidden_size
+        self.p_dropout = p_dropout
+
+        weights = "DEFAULT" if pretrained else None
+        self.vgg = models.vgg16_bn(weights) if bn else models.vgg16(weights)
 
         # freeze feature extraction layers
         if freeze_cnn:
@@ -47,13 +42,13 @@ class VGG_Jabbar(nn.Module):
         cnn_out_features = self.vgg.classifier[0].in_features
 
         self.vgg.classifier = nn.Sequential(
-            nn.Linear(in_features=cnn_out_features, out_features=1024, bias=True),
+            nn.Linear(in_features=cnn_out_features, out_features=self.hidden_size, bias=True),
             nn.ReLU(inplace=True),
-            nn.Dropout(p=0.5, inplace=False),
-            nn.Linear(in_features=1024, out_features=1024, bias=True),
+            nn.Dropout(p=self.p_dropout, inplace=False),
+            nn.Linear(in_features=self.hidden_size, out_features=self.hidden_size, bias=True),
             nn.ReLU(inplace=True),
-            nn.Dropout(p=0.5, inplace=False),
-            nn.Linear(in_features=1024, out_features=num_classes, bias=True)
+            nn.Dropout(p=self.p_dropout, inplace=False),
+            nn.Linear(in_features=hidden_size, out_features=num_classes, bias=True)
         )
         
     def forward(self, x):
