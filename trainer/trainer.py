@@ -10,7 +10,7 @@ class Trainer(BaseTrainer):
     Trainer class
     """
     def __init__(self, model, criterion, metric_ftns, optimizer, config, device,
-                 data_loader, valid_data_loader=None, lr_scheduler=None, len_epoch=None):
+                 data_loader, valid_data_loader=None, lr_scheduler=None, len_epoch=None, register_img_batch=False):
         super().__init__(model, criterion, metric_ftns, optimizer, config)
         self.config = config
         self.device = device
@@ -26,6 +26,7 @@ class Trainer(BaseTrainer):
         self.do_validation = self.valid_data_loader is not None
         self.lr_scheduler = lr_scheduler
         self.log_step = int(np.sqrt(data_loader.batch_size))
+        self.register_img_batch = register_img_batch
         self.img_step = max(self.log_step, data_loader.batch_size//2)
 
         self.train_metrics = MetricTracker('loss', 'lr', *[m.__name__ for m in self.metric_ftns], writer=self.writer)
@@ -74,7 +75,8 @@ class Trainer(BaseTrainer):
                     epoch,
                     self._progress(batch_idx),
                     loss.item()))
-            if batch_idx % self.img_step == 0:
+            
+            if self.register_img_batch and (batch_idx % self.img_step == 0):
                 self.writer.add_image('input', make_grid(data.cpu(), nrow=8, normalize=True))
 
             if batch_idx == self.len_epoch:

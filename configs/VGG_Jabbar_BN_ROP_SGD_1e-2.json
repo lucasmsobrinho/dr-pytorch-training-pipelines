@@ -69,6 +69,7 @@
         "save_dir": "saved/",
         "save_period": 5,
         "verbosity": 2,
+        "register_img_batch": false,
 
         "monitor": "min val_loss",
         "early_stop": 30,
