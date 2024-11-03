@@ -1,0 +1,78 @@
+{
+    "name": "VGG_BN_ROP_SGD_1e-2",
+    "n_gpu": 1,
+
+    "arch": {
+        "type": "VGG_Jabbar",
+        "args": {
+            "num_classes": 5,
+            "freeze_cnn": false,
+            "pretrained": true,
+            "bn": true,
+            "hidden_size": 512,
+            "p_dropout": 0.2
+        }
+    },
+
+    "train_set": {
+        "type": "EyePacsDataset",
+        "args": {
+            "annotations_file": "../scratch/train_aug_labels_naive.csv",
+            "img_dir": "../scratch/kaggle256/"
+        }
+    },
+    "valid_set": {
+        "type": "EyePacsDataset",
+        "args": {
+            "annotations_file": "../scratch/valid_aug_labels_naive.csv",
+            "img_dir": "../scratch/kaggle256/"
+        }
+    },
+    "test_set": {
+        "type": "EyePacsDataset",
+        "args": {
+            "annotations_file": "../scratch/test_labels.csv",
+            "img_dir": "../scratch/tkaggle256/"
+        }
+    },
+    "data_loader": {
+        "type": "EyePacsDataLoader",
+        "args":{
+            "batch_size": 64,
+            "shuffle": true,
+            "num_workers": 4
+        }
+    },
+    "optimizer": {
+        "type": "SGD",
+        "args":{
+            "lr": 0.01,
+            "momentum": 0.9,
+            "weight_decay": 0.0005
+        }
+    },
+    "loss": "cross_entropy_loss",
+    "metrics": [
+        "accuracy"
+    ],
+    "lr_scheduler": {
+        "type": "ReduceLROnPlateau",
+        "args": {
+            "factor":0.90,
+            "patience": 3,
+            "min_lr": 0.000001
+        }
+    },
+    "trainer": {
+        "epochs": 100,
+
+        "save_dir": "saved/",
+        "save_period": 5,
+        "verbosity": 2,
+
+        "monitor": "min val_loss",
+        "early_stop": 30,
+
+        "tensorboard": true
+    }
+}
