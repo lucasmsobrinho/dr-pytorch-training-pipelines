@@ -71,7 +71,6 @@ class Trainer(BaseTrainer):
             self.train_metrics.update_confusion_matrix(output, target)
 
             if batch_idx % self.log_step == 0:
-                self.logger.debug(f"Training {self.checkpoint_dir}")
                 self.logger.debug('Train Epoch: {} {} Loss: {:.6f}'.format(
                     epoch,
                     self._progress(batch_idx),
