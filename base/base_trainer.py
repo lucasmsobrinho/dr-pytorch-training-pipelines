@@ -67,7 +67,7 @@ class BaseTrainer:
             log.update(result)
 
             # print logged informations to the screen
-            self.logger.info(f"\nTraining: {self.checkpoint_dir.split('models/')[-1]}")
+            self.logger.info(f"\nTraining: {str(self.checkpoint_dir).split('models/')[-1]}")
             for key, value in log.items():
                 self.logger.info('    {:15s}: {}'.format(str(key), value))
 
@@ -97,9 +97,12 @@ class BaseTrainer:
                     break
 
             if epoch % self.save_period == 0:
-                self._save_checkpoint(epoch, save_best=best)
+                self._save_checkpoint(epoch)
 
-    def _save_checkpoint(self, epoch, save_best=False):
+            if best:
+                self._save_best(epoch)
+
+    def _save_checkpoint(self, epoch):
         """
         Saving checkpoints
 
@@ -119,10 +122,27 @@ class BaseTrainer:
         filename = str(self.checkpoint_dir / 'checkpoint-epoch{}.pth'.format(epoch))
         torch.save(state, filename)
         self.logger.info("Saving checkpoint: {} ...".format(filename))
-        if save_best:
-            best_path = str(self.checkpoint_dir / 'model_best.pth')
-            torch.save(state, best_path)
-            self.logger.info("Saving current best: model_best.pth ...")
+
+    def _save_best(self, epoch):
+        """
+        Saving best model every epoch
+
+        :param epoch: current epoch number
+        :param log: logging information of the epoch
+        :param save_best: if True, rename the saved checkpoint to 'model_best.pth'
+        """
+        arch = type(self.model).__name__
+        state = {
+            'arch': arch,
+            'epoch': epoch,
+            'state_dict': self.model.state_dict(),
+            'optimizer': self.optimizer.state_dict(),
+            'monitor_best': self.mnt_best,
+            'config': self.config
+        }
+        best_path = str(self.checkpoint_dir / 'model_best.pth')
+        torch.save(state, best_path)
+        self.logger.info("Saving current best: model_best.pth ...")
 
     def _resume_checkpoint(self, resume_path):
         """
