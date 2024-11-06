@@ -87,6 +87,10 @@ class ConfigParser:
         `object = module.name(a, b=1)`
         """
         module_name = self[name]['type']
+        # workaround to handle no transform in train/test
+        # TODO: think a better way to do that
+        if module_name == "none":
+            return None
         module_args = dict(self[name]['args'])
         assert all([k not in module_args for k in kwargs]), 'Overwriting kwargs given in config file is not allowed'
         module_args.update(kwargs)
@@ -103,6 +107,8 @@ class ConfigParser:
         """
         module_name = self[name]['type']
         module_args = dict(self[name]['args'])
+        if module_name == "none":
+            return None
         assert all([k not in module_args for k in kwargs]), 'Overwriting kwargs given in config file is not allowed'
         module_args.update(kwargs)
         return partial(getattr(module, module_name), *args, **module_args)

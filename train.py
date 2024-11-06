@@ -26,12 +26,12 @@ def main(config):
     preprocess = config.init_obj('preprocess', module_proc)
     augmentation = config.init_obj('augmentation', module_proc)
 
-    train_proc = transforms.Compose([preprocess, augmentation])
-    valid_proc = transforms.Compose([preprocess, augmentation])
+    #train_proc = transforms.Compose([preprocess, augmentation])
+    #valid_proc = transforms.Compose([preprocess, augmentation])
 
     # should training time augmentation be applied to valid_set (?)
-    train_set = config.init_obj('train_set', module_data, transform=train_proc)
-    valid_set = config.init_obj('valid_set', module_data, transform=valid_proc)
+    train_set = config.init_obj('train_set', module_data, transform=preprocess)
+    valid_set = config.init_obj('valid_set', module_data, transform=preprocess)
 
     data_loader = config.init_obj('data_loader', module_loader, dataset=train_set)
 
