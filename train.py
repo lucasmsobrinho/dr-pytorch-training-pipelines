@@ -5,6 +5,7 @@ import numpy as np
 import model.loss as module_loss
 import model.metric as module_metric
 import model.model as module_arch
+import data_loader.img_proc as module_proc
 import data_loader.data_loader as module_loader
 import data_loader.data_loader as module_data
 from parse_config import ConfigParser
@@ -22,25 +23,18 @@ np.random.seed(SEED)
 def main(config):
     logger = config.get_logger('train')
 
-    # setup data_loader instances
-    imagenet = [
-            transforms.ToTensor(),
-            #transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
-            transforms.Normalize(mean=[0.5, 0.5, 0.5], std=[0.5, 0.5, 0.5]),
-    ]
+    preprocess = config.init_obj('preprocess', module_proc)
+    augmentation = config.init_obj('augmentation', module_proc)
 
-    aug = [
-            transforms.RandomAffine(degrees=30, scale=(0.9, 1.1), shear=18)
-    ]
-    preprocess = transforms.Compose(imagenet) # if needed can be initialized from config file
-    augmentation = transforms.Compose(imagenet + aug) # if needed can be initialized from config file
+    train_proc = transforms.Compose([preprocess, augmentation])
+    valid_proc = transforms.Compose([preprocess, augmentation])
 
-    # preferable, because training time augmentation shouldn't be applied to valid_set
-    train_set = config.init_obj('train_set', module_data, transform=augmentation)
-    valid_set = config.init_obj('valid_set', module_data, transform=preprocess)
+    # should training time augmentation be applied to valid_set (?)
+    train_set = config.init_obj('train_set', module_data, transform=train_proc)
+    valid_set = config.init_obj('valid_set', module_data, transform=valid_proc)
 
     data_loader = config.init_obj('data_loader', module_loader, dataset=train_set)
-    
+
     if "validation_split" in config['data_loader']["args"]:
         print("Splitting from dataloader (randomly set train/valid)")
         valid_data_loader = data_loader.split_validation()

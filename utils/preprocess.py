@@ -11,7 +11,7 @@ import functools
 import argparse
 
 
-class Lambda(torchvision.transforms.Lambda):
+class CutomLambda(torchvision.transforms.Lambda):
     """
         Lambda Class that accept parameters
     """ 
@@ -119,7 +119,7 @@ def transform_vanilla(img_size=512):
 def transform_scale_and_crop(img_size=512):
     return transforms.Compose([
         transforms.ConvertImageDtype(torch.float32),
-        Lambda(adjust_radius_center, img_size=img_size),
+        CutomLambda(adjust_radius_center, img_size=img_size),
         transforms.CenterCrop(img_size),
         transforms.ConvertImageDtype(torch.uint8),
         transforms.Lambda(lambda x: x.to('cpu'))
@@ -129,12 +129,12 @@ def transform_scale_and_crop(img_size=512):
 def transform_kaggle(img_size=512):
     return transforms.Compose([
         transforms.ConvertImageDtype(torch.float32),
-        Lambda(adjust_radius_center, img_size=img_size),
+        CutomLambda(adjust_radius_center, img_size=img_size),
         transforms.CenterCrop(img_size),
-        Lambda(subtract_local_avg_color, img_size=img_size),
-        Lambda(mask_outer, img_size=img_size),
+        CutomLambda(subtract_local_avg_color, img_size=img_size),
+        CutomLambda(mask_outer, img_size=img_size),
         transforms.ConvertImageDtype(torch.uint8),
-        Lambda(lambda x: x.to('cpu')),
+        CutomLambda(lambda x: x.to('cpu')),
     ])
 
 
@@ -156,7 +156,11 @@ def process(df, proc_name="vanilla", img_size=256, input_folder="./train", outpu
     transform = get_proc(proc_name, img_size)
     
     if not os.path.exists(output_folder):
-        os.mkdir(output_folder)
+        try:
+            os.mkdir(output_folder)
+        except FileExistsError:
+            # never thought racing conditions would be so obvious
+            print("probably a sibling process ended up creating it already.")
 
     for idx, img_name in enumerate(df.name):
         if (idx % 1000 == 0):
