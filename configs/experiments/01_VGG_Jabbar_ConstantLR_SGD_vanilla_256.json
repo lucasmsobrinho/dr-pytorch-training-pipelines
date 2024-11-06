@@ -17,7 +17,6 @@
     "preprocess": {
         "type": "none",
         "args": {
-            "img_size": 224
         }
     },
     "augmentation": {
