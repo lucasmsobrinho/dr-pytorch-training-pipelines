@@ -8,6 +8,8 @@ import numpy as np
 
 import os
 import functools
+import argparse
+
 
 class Lambda(torchvision.transforms.Lambda):
     """
@@ -51,7 +53,7 @@ def threshold(img, thresh=10):
 def green_channel(img):
     return img[1]
 
-
+# TODO: 
 def CLAHE(img, clip_limit=2.0, tile_grid_size=(8, 8)):
     img = img.cpu().numpy().astype(np.uint8)
     clahe = cv2.createCLAHE(clipLimit=clip_limit, tileGridSize=tile_grid_size)
@@ -109,11 +111,10 @@ def adjust_radius_center(img, img_size=512):
 
 def transform_vanilla(img_size=512):
     return transforms.Compose([
-        transforms.Resize((img_size, img_size), interpolation=transforms.InterpolationMode.BICUBIC),
+        transforms.Resize((img_size, img_size)),
         transforms.ConvertImageDtype(torch.uint8),
         transforms.Lambda(lambda x: x.to('cpu'))
     ])
-
 
 def transform_scale_and_crop(img_size=512):
     return transforms.Compose([
@@ -151,8 +152,12 @@ def transform_jabbar(img_size=512):
         transforms.Lambda(lambda x: x.to('cpu')),
     ])
 
+def process(df, proc_name="vanilla", img_size=256, input_folder="./train", output_folder="./proc256"):
+    transform = get_proc(proc_name, img_size)
+    
+    if not os.path.exists(output_folder):
+        os.mkdir(output_folder)
 
-def process(df, transform, input_folder="./train", output_folder="./proc256"):
     for idx, img_name in enumerate(df.name):
         if (idx % 1000 == 0):
             print(f"{idx}/{df.name.shape[0]}, {img_name}, {output_folder}/{img_name}.jpeg")
@@ -163,24 +168,49 @@ def process(df, transform, input_folder="./train", output_folder="./proc256"):
             torchvision.io.write_jpeg(proc, f"{output_folder}/{img_name}.jpeg", 100)
 
 
-if __name__=="__main__":
-    labels_path = "./sample.csv"
-    input_folder="./train"
-    output_folder="./kaggle256"
-    img_size = 256
-    proc_name = "kaggle"
-
-    pool_size = 8
-
+def get_proc(name, img_size):
+    # workaround function to avoid multiprocessing bugs when dealing with lambda functions
     proc_map = {
         "vanilla": transform_vanilla(img_size),
         "scale_crop": transform_scale_and_crop(img_size),
         "kaggle": transform_kaggle(img_size),
-        "jabbar": transform_jabbar(img_size)
+        "jabbar": transform_jabbar(img_size),
     }
+    return proc_map[name]
 
-    _process = functools.partial(process, 
-                                transform=proc_map[proc_name],
+
+if __name__=="__main__":
+    parser = argparse.ArgumentParser(
+        description="Preprocessing pipeline for image datasets"
+    )
+
+    parser.add_argument('-p', '--proc_name', default="vanilla", type=str,
+                      choices=("vanilla", "scale_crop", "kaggle", "jabbar"),
+                      help='config file path (default: "vanilla")')
+    parser.add_argument('-l', '--labels_path', default="./sample.csv", type=str,
+                      help='config file path (default: "./sample.csv")')
+    parser.add_argument('-i', '--input_folder', default="./train", type=str,
+                      help='source folder for input images (default: "./train")')
+    parser.add_argument('-o', '--output_folder', default="./proc", type=str,
+                      help='target folder for processed images (default: "./proc")')
+    parser.add_argument('-s', '--img_size', default=256, type=int,
+                      help='output image size (default: 256)')
+    parser.add_argument('--pool_size', default=1, type=int,
+                      help='pool size for parallelization (default: 1)')
+    
+    args = parser.parse_args()
+    
+    proc_name = args.proc_name
+    labels_path = args.labels_path
+    input_folder = args.input_folder
+    output_folder= args.output_folder
+    img_size = args.img_size
+
+    pool_size = args.pool_size
+
+    _process = functools.partial(process,
+                                proc_name=proc_name,
+                                img_size=img_size,
                                 input_folder=input_folder, 
                                 output_folder=output_folder)
 
