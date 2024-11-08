@@ -28,7 +28,7 @@ def weighted_kappa(output, target, weight=2):
     # https://datatab.net/tutorial/weighted-cohens-kappa
     with torch.no_grad():
         pred = torch.argmax(output, dim=1)
-        k = pred.shape[1]
+        k = output.shape[1]
 
         assert pred.shape[0] == len(target)
 

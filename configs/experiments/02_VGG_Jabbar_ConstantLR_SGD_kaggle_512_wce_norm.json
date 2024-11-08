@@ -1,5 +1,5 @@
 {
-    "name": "01_VGG_Jabbar_ConstantLR_SGD_vanilla_512",
+    "name": "02_VGG_Jabbar_ConstantLR_SGD_kaggle_512_wce_norm",
     "n_gpu": 1,
 
     "arch": {
@@ -29,22 +29,22 @@
     "train_set": {
         "type": "EyePacsDataset",
         "args": {
-            "annotations_file": "../scratch/train_labels.csv",
-            "img_dir": "../scratch/resize512/"
+            "annotations_file": "../scratch/train_aug_labels_stratified.csv",
+            "img_dir": "../scratch/kaggle512/"
         }
     },
     "valid_set": {
         "type": "EyePacsDataset",
         "args": {
-            "annotations_file": "../scratch/valid_labels.csv",
-            "img_dir": "../scratch/resize512/"
+            "annotations_file": "../scratch/valid_aug_labels_stratified.csv",
+            "img_dir": "../scratch/kaggle512/"
         }
     },
     "test_set": {
         "type": "EyePacsDataset",
         "args": {
             "annotations_file": "../scratch/test_labels.csv",
-            "img_dir": "../scratch/tresize512/"
+            "img_dir": "../scratch/tkaggle512/"
         }
     },
 
