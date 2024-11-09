@@ -9,7 +9,7 @@
             "freeze_cnn": false,
             "pretrained": true,
             "bn": false,
-            "hidden_size": 256,
+            "hidden_size": 512,
             "p_dropout": 0.2
         }
     },
