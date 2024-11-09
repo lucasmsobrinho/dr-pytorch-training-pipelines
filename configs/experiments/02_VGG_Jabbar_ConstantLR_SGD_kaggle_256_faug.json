@@ -63,11 +63,7 @@
             "lr": 0.001
         }
     },
-    "loss": { 
-        "type": "cross_entropy_loss",
-        "args": {
-            "weights": [1, 2, 3]
-        },
+    "loss": "cross_entropy_loss",
     "metrics": [
         "accuracy"
     ],
