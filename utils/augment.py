@@ -100,6 +100,18 @@ def augmentation_kaggle(img_size=256):
     ])
 
 
+def augmentation_simple(img_size=256):
+    return transforms.Compose([
+        transforms.ConvertImageDtype(torch.float32),
+        transforms.RandomHorizontalFlip(p=0.5),
+        transforms.RandomVerticalFlip(p=0.5),
+        transforms.RandomRotation(degrees=360),
+        transforms.ConvertImageDtype(torch.uint8),
+        transforms.Lambda(lambda x: x.to('cpu')),
+    ])
+
+
+
 def augment(df, proc_name="vanilla", img_size=256, input_folder="./kaggle256", output_folder="./kaggle256"):
      transform = get_proc(proc_name, img_size)
 
@@ -119,7 +131,8 @@ def get_proc(name, img_size):
     # workaround function to avoid multiprocessing bugs when dealing with lambda functions
     proc_map = {
         "jabbar": augmentation_jabbar(img_size),
-        "kaggle": augmentation_kaggle(img_size)
+        "kaggle": augmentation_kaggle(img_size),
+        "simple": augmentation_simple(img_size)
     }
     return proc_map[name]
 
@@ -129,12 +142,12 @@ if __name__=="__main__":
         description="Preprocessing pipeline for image datasets"
     )
 
-    parser.add_argument('-p', '--proc_name', default="kaggle", type=str,
-                      choices=("kaggle", "jabbar"),
+    parser.add_argument('-p', '--proc_name', default="simple", type=str,
+                      choices=("kaggle", "jabbar", "simple"),
                       help='augmentation to run (default: "kaggle")')
     parser.add_argument('-l', '--labels_path', default="./train_labels.csv", type=str,
                       help='input labels file path (default: "./train_labels.csv")')
-    parser.add_argument('-l', '--output_labels_path', default="./train_aug_labels.csv", type=str,
+    parser.add_argument('-O', '--output_labels_path', default="./train_aug_labels.csv", type=str,
                       help='output labels file path (default: "./train_aug_labels.csv")')
     parser.add_argument('-i', '--input_folder', default="./proc", type=str,
                       help='source folder for input images (default: "./proc")')
