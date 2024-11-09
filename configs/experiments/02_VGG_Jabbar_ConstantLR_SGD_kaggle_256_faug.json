@@ -29,22 +29,22 @@
     "train_set": {
         "type": "EyePacsDataset",
         "args": {
-            "annotations_file": "../scratch/train_aug_labels_stratified.csv",
-            "img_dir": "../scratch/kaggle256/"
+            "annotations_file": "train_aug_labels_stratified.csv",
+            "img_dir": "data/aug_kaggle_prep_kaggle_256/train/"
         }
     },
     "valid_set": {
         "type": "EyePacsDataset",
         "args": {
-            "annotations_file": "../scratch/valid_aug_labels_stratified.csv",
-            "img_dir": "../scratch/kaggle256/"
+            "annotations_file": "valid_aug_labels_stratified.csv",
+            "img_dir": "data/aug_kaggle_prep_kaggle_256/train/"
         }
     },
     "test_set": {
         "type": "EyePacsDataset",
         "args": {
-            "annotations_file": "../scratch/test_labels.csv",
-            "img_dir": "../scratch/tkaggle256/"
+            "annotations_file": "test_labels.csv",
+            "img_dir": "tkaggle256/"
         }
     },
 

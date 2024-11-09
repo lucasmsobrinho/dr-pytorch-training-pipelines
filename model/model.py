@@ -39,7 +39,11 @@ class VGG_Jabbar(nn.Module):
                 parameter.requires_grad = False
 
         # Replace final layers
-        cnn_out_features = self.vgg.classifier[0].in_features
+        if not torch.cuda.is_available():
+            self.vgg.avgpool = nn.AdaptiveAvgPool2d(8)
+            cnn_out_features = 512 * 8 * 8
+        else:
+            cnn_out_features = self.vgg.classifier[0].in_features
 
         self.vgg.classifier = nn.Sequential(
             nn.Linear(in_features=cnn_out_features, out_features=self.hidden_size, bias=True),

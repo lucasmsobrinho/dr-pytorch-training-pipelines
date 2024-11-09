@@ -68,7 +68,8 @@ def mask_outer(img, img_size=512):
             radius = int(0.9*img_size/2),
             color = (1, 1, 1),
             thickness = -1)
-    base = torch.tensor(base).permute(2,0,1).to('cuda')
+    device = torch.device('cuda' if torch.cuda.is_available() else 'mps')
+    base = torch.tensor(base).permute(2,0,1).to(device)
     return base*img + (1-base)*.5
 
 
@@ -123,7 +124,8 @@ def augment(df, proc_name="vanilla", img_size=256, input_folder="./kaggle256", o
                 print(f"{operation}/{n_operations}")
             for img_name in subdf:
                 out_name = f"{img_name}_aug_{operation}"
-                img = torchvision.io.read_image(f"{input_folder}/{img_name}.jpeg").to('cuda')
+                device = torch.device('cuda' if torch.cuda.is_available() else 'mps')
+                img = torchvision.io.read_image(f"{input_folder}/{img_name}.jpeg").to(device)
                 aug = transform(img)
                 torchvision.io.write_jpeg(aug, f"{output_folder}/{out_name}.jpeg", 100)
 
@@ -176,7 +178,7 @@ if __name__=="__main__":
                                 input_folder=input_folder, 
                                 output_folder=output_folder)
 
-    df = pd.read_csv(labels_path, header=None, names=["name", "label"])
+    df = pd.read_csv(labels_path, header=1, names=["name", "label"])
     df = df.sample(frac=1)
 
     new_imgs = {'name':[], 'label':[]}
