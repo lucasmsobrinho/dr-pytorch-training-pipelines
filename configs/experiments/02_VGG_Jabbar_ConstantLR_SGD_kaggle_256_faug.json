@@ -1,5 +1,5 @@
 {
-    "name": "02_VGG_Jabbar_ConstantLR_SGD_kaggle_512_faug",
+    "name": "02_VGG_Jabbar_ConstantLR_SGD_kaggle_256_faug",
     "n_gpu": 1,
 
     "arch": {
@@ -30,28 +30,28 @@
         "type": "EyePacsDataset",
         "args": {
             "annotations_file": "../scratch/train_aug_labels_stratified.csv",
-            "img_dir": "../scratch/kaggle512/"
+            "img_dir": "../scratch/kaggle256/"
         }
     },
     "valid_set": {
         "type": "EyePacsDataset",
         "args": {
             "annotations_file": "../scratch/valid_aug_labels_stratified.csv",
-            "img_dir": "../scratch/kaggle512/"
+            "img_dir": "../scratch/kaggle256/"
         }
     },
     "test_set": {
         "type": "EyePacsDataset",
         "args": {
             "annotations_file": "../scratch/test_labels.csv",
-            "img_dir": "../scratch/tkaggle512/"
+            "img_dir": "../scratch/tkaggle256/"
         }
     },
 
     "data_loader": {
         "type": "EyePacsDataLoader",
         "args":{
-            "batch_size": 32,
+            "batch_size": 64,
             "shuffle": true,
             "num_workers": 4
         }
@@ -63,7 +63,11 @@
             "lr": 0.001
         }
     },
-    "loss": "cross_entropy_loss",
+    "loss": { 
+        "type": "cross_entropy_loss",
+        "args": {
+            "weights": [1, 2, 3]
+        },
     "metrics": [
         "accuracy"
     ],
