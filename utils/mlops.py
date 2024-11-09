@@ -32,10 +32,14 @@ if __name__ == "__main__":
     else:
         print(f"{len(exps)} experiments found.")
 
+    mlflow.set_tracking_uri("http://autograd.live")
+
     for event_path, train_log_path, test_log_path, config_path in exps:
         experiment, run = config_path.split('/')[-3:-1]
 
         try:
+            mlflow.log_artifact(train_log_path, "log")
+            mlflow.log_artifact(test_log_path, "log")
             # load config.json
             with open(config_path) as f:
                 config = json.load(f)
@@ -64,8 +68,6 @@ if __name__ == "__main__":
                         # Log each metric from TensorBoard to MLflowea
                         mlflow.log_metric(tag, e.value, step=e.step)
 
-                mlflow.log_artifact(train_log_path, "info.log")
-                mlflow.log_artifact(test_log_path, "test.log")
 
         except Exception as e:
             print(e)
