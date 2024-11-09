@@ -129,13 +129,13 @@ if __name__=="__main__":
         description="Preprocessing pipeline for image datasets"
     )
 
-    parser.add_argument('-p', '--proc_name', default="vanilla", type=str,
+    parser.add_argument('-p', '--proc_name', default="kaggle", type=str,
                       choices=("kaggle", "jabbar"),
-                      help='augmentation to run (default: "vanilla")')
-    parser.add_argument('-l', '--labels_path', default="./sample.csv", type=str,
-                      help='input labels file path (default: "./sample.csv")')
-    parser.add_argument('-l', '--output_labels_path', default="./aug_sample.csv", type=str,
-                      help='output labels file path (default: "./aug_sample.csv")')
+                      help='augmentation to run (default: "kaggle")')
+    parser.add_argument('-l', '--labels_path', default="./train_labels.csv", type=str,
+                      help='input labels file path (default: "./train_labels.csv")')
+    parser.add_argument('-l', '--output_labels_path', default="./train_aug_labels.csv", type=str,
+                      help='output labels file path (default: "./train_aug_labels.csv")')
     parser.add_argument('-i', '--input_folder', default="./proc", type=str,
                       help='source folder for input images (default: "./proc")')
     parser.add_argument('-o', '--output_folder', default="./proc", type=str,
@@ -146,7 +146,6 @@ if __name__=="__main__":
                       help='pool size for parallelization (default: 4)')
     
     args = parser.parse_args()
-
 
     proc_name = args.proc_name
     labels_path = args.labels_path
