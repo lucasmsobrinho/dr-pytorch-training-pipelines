@@ -7,6 +7,9 @@ def nll_loss(output, target):
 def cross_entropy_loss(output, target):
     return F.cross_entropy(output, target)
 
+def weighted_cross_entropy_loss(output, target, weight):
+    return F.cross_entropy(output, target, weight)
+ 
 def categorical_cross_entropy_loss(output, target, axis=-1):
     # output (B, n_classes)
     # categorical_cross_entropy_loss is very different in keras
@@ -22,4 +25,3 @@ def categorical_cross_entropy_loss(output, target, axis=-1):
     return torch.mean(-torch.sum(target * log_prob, dim=axis))
 
 
- 

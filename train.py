@@ -12,6 +12,7 @@ from parse_config import ConfigParser
 from trainer import Trainer
 from utils import prepare_device
 import torchvision.transforms as transforms
+from functools import partial
 
 # fix random seeds for reproducibility
 SEED = 123
@@ -63,6 +64,9 @@ def main(config):
 
     # get function handles of loss and metrics  
     criterion = getattr(module_loss, config['loss'])
+    # if needed, reimplement
+    if "loss_args" in config.config:
+        criterion = partial(criterion, weight=torch.Tensor(config['loss_args']['weight']).to(device))
     metrics = [getattr(module_metric, met) for met in config['metrics']]
 
     # build optimizer, learning rate scheduler. delete every lines containing lr_scheduler for disabling scheduler

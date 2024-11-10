@@ -1,5 +1,5 @@
 {
-    "name": "02_VGG_Jabbar_ConstantLR_SGD_kaggle_512_wce_norm",
+    "name": "02_VGG_Jabbar_ConstantLR_SGD_kaggle_256_wce",
     "n_gpu": 1,
 
     "arch": {
@@ -24,7 +24,6 @@
         "args": {
         }
     },
-
 
     "train_set": {
         "type": "EyePacsDataset",

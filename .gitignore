@@ -1,6 +1,10 @@
 # Data Folder
 data
 data/*
+.data
+
+# mlflow tests
+mlruns/*
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

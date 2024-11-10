@@ -8,7 +8,7 @@ import numpy as np
 from pathlib import Path
 from itertools import repeat
 from collections import OrderedDict
-
+import torchvision
 
 def ensure_dir(dirname):
     dirname = Path(dirname)
@@ -118,3 +118,14 @@ class MetricTracker:
 
     def result(self):
         return dict(self._data.average)
+
+def compute_dataset_metrics(paths):
+    avg = torch.Tensor((0,0,0)).type(torch.float64)
+    std = torch.Tensor((0,0,0)).type(torch.float64)
+    for path in paths:
+        img = torchvision.io.read_image(path)
+        avg += torch.mean(img, dim=(1,2), dtype=torch.float64)
+        std += torch.std(img.type(torch.float64), dim=(1,2))
+    avg /= len(paths)
+    std /= len(paths)
+    return avg, std

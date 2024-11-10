@@ -1,5 +1,5 @@
 {
-    "name": "02_VGG_Jabbar_ConstantLR_SGD_scale_512_wce",
+    "name": "02_VGG_Jabbar_ConstantLR_SGD_scale_256_wce",
     "n_gpu": 1,
 
     "arch": {
@@ -13,7 +13,7 @@
             "p_dropout": 0.2
         }
     },
-    
+
     "preprocess": {
         "type": "none",
         "args": {
@@ -24,7 +24,6 @@
         "args": {
         }
     },
-
 
     "train_set": {
         "type": "EyePacsDataset",
@@ -43,7 +42,7 @@
     "test_set": {
         "type": "EyePacsDataset",
         "args": {
-            "annotations_file": "../scratch/valid_labels.csv",
+            "annotations_file": "../scratch/test_labels.csv",
             "img_dir": "../scratch/tscale512/"
         }
     },

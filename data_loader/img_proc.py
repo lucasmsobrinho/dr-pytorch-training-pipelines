@@ -79,6 +79,15 @@ def transform_scale_and_crop(img_size=512):
 
 
 # preprocessing functions used in train and test
+def preprocess_eyepacs():
+    return transforms.Compose([
+        transforms.Normalize(mean=[0.4466, 0.3089, 0.2198], std=[0.2080, 0.1455, 0.1045])
+    ])
+
+def preprocess_eyepacs_kaggle():
+    return transforms.Compose([
+        transforms.Normalize(mean=[0.5037, 0.5010, 0.5000], std=[0.0650, 0.0681, 0.0500])
+    ])
 
 def preprocess_imagenet():
     return transforms.Compose([
@@ -86,7 +95,7 @@ def preprocess_imagenet():
     ])
 
 
-def preprocess_cifar10(resize=True, img_size=224):
+def preprocess_cifar10(resize=False, img_size=224):
     t_list = []
     if resize:
         t_list.append(transforms.Resize(size=(img_size, img_size)))
