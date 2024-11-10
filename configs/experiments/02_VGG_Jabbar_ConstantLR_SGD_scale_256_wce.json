@@ -28,14 +28,14 @@
     "train_set": {
         "type": "EyePacsDataset",
         "args": {
-            "annotations_file": "../scratch/train_aug_labels_stratified.csv",
+            "annotations_file": "../scratch/train_labels.csv",
             "img_dir": "../scratch/scale512/"
         }
     },
     "valid_set": {
         "type": "EyePacsDataset",
         "args": {
-            "annotations_file": "../scratch/valid_aug_labels_stratified.csv",
+            "annotations_file": "../scratch/valid_labels.csv",
             "img_dir": "../scratch/scale512/"
         }
     },
@@ -62,7 +62,10 @@
             "lr": 0.001
         }
     },
-    "loss": "cross_entropy_loss",
+    "loss": "weighted_cross_entropy_loss",
+    "loss_args": {
+        "weights": [0.27218907400232467, 1.3275132275132275, 2.875644699140401, 8.047193585337915, 9.922598870056497]
+    },
     "metrics": [
         "accuracy"
     ],
