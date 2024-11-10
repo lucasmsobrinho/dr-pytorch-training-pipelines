@@ -10,7 +10,9 @@ import model.metric as module_metric
 import model.model as module_arch
 from utils.util import MetricTracker
 from parse_config import ConfigParser
+from utils import prepare_device
 import numpy as np
+from functools import partial
 
 def main(config):
     logger = config.get_logger('test')
@@ -28,8 +30,26 @@ def main(config):
     model = config.init_obj('arch', module_arch)
     logger.info(model)
 
+    # prepare for (multi-device) GPU training or MPS
+    if torch.cuda.is_available():
+        device, device_ids = prepare_device(config['n_gpu'])
+        model = model.to(device)
+        if len(device_ids) > 1:
+            model = torch.nn.DataParallel(model, device_ids=device_ids)
+    elif torch.backends.mps.is_available():
+        device = torch.device("mps")
+        model = model.to(device)
+    else:
+        device = torch.device("cpu")
+        model = model.to(device)
+    print(f"Using device: {device}")
+
     # get function handles of loss and metrics
     loss_fn = getattr(module_loss, config['loss'])
+    # if needed, reimplement
+    if "loss_args" in config.config:
+        loss_fn = partial(loss_fn, weight=torch.Tensor(config['loss_args']['weight']).to(device))
+
     metric_fns = [getattr(module_metric, met) for met in config['metrics']]
 
     logger.info('Loading checkpoint: {} ...'.format(config.resume))
