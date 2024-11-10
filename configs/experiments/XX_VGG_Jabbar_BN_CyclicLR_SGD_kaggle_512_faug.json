@@ -1,0 +1,94 @@
+{
+    "name": "XX_VGG_Jabbar_BN_CyclicLR_SGD_kaggle_512_faug",
+    "n_gpu": 1,
+
+    "arch": {
+        "type": "VGG_Jabbar",
+        "args": {
+            "num_classes": 5,
+            "freeze_cnn": false,
+            "pretrained": true,
+            "bn": true,
+            "hidden_size": 1024,
+            "p_dropout": 0.2
+        }
+    },
+    
+    "preprocess": {
+        "type": "preprocess_eyepacs_kaggle",
+        "args": {
+        }
+    },
+    "augmentation": {
+        "type": "augmentation_kaggle",
+        "args": {
+            "img_size": 512
+        }
+    },
+
+
+    "train_set": {
+        "type": "EyePacsDataset",
+        "args": {
+            "annotations_file": "../scratch/train_aug_labels_stratified.csv",
+            "img_dir": "../scratch/scale512/"
+        }
+    },
+    "valid_set": {
+        "type": "EyePacsDataset",
+        "args": {
+            "annotations_file": "../scratch/valid_aug_labels_stratified.csv",
+            "img_dir": "../scratch/scale512/"
+        }
+    },
+    "test_set": {
+        "type": "EyePacsDataset",
+        "args": {
+            "annotations_file": "../scratch/test_labels.csv",
+            "img_dir": "../scratch/tscale512/"
+        }
+    },
+
+    "data_loader": {
+        "type": "EyePacsDataLoader",
+        "args":{
+            "batch_size": 32,
+            "shuffle": true,
+            "num_workers": 4
+        }
+    },
+
+    "optimizer": {
+        "type": "SGD",
+        "args":{
+            "lr": 0.01,
+            "momentum": 0.9,
+            "weight_decay": 0.0005
+        }
+    },
+    "loss": "cross_entropy_loss",
+    "metrics": [
+        "accuracy"
+    ],
+    "lr_scheduler": {
+        "type": "CyclicLR",
+        "args": {
+            "base_lr": 0.0001,
+            "max_lr": 0.01,
+            "step_size_up": 20000,
+            "step_size_down": 20000
+        }
+    },
+    "trainer": {
+        "epochs": 100,
+
+        "save_dir": "saved/",
+        "save_period": 25, 
+        "verbosity": 2,
+
+        "monitor": "min val_loss",
+        "early_stop": 20,
+
+        "tensorboard": true
+    }
+}

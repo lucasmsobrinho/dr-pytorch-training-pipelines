@@ -137,5 +137,14 @@ def augmentation_kaggle(img_size=256):
         CutomLambda(mask_outer, img_size=img_size)
     ])
 
+
+def augmentation_simple(img_size=256):
+    return transforms.Compose([
+        transforms.ConvertImageDtype(torch.float32),
+        transforms.RandomHorizontalFlip(p=0.5),
+        transforms.RandomVerticalFlip(p=0.5),
+        transforms.RandomRotation(degrees=360),
+    ])
+
 def none():
     return None
