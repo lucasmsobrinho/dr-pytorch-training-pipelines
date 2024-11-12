@@ -6,6 +6,8 @@ import os
 
 def get_experiments(base_path, exp_pattern):
     exps = []
+    old = []
+    new = []
     test_paths = glob.glob(f"{base_path}/log/{exp_pattern}/*/test.log")
     for test_log_path in test_paths:
         experiment, run = test_log_path.split("/")[-3:-1]
@@ -17,20 +19,30 @@ def get_experiments(base_path, exp_pattern):
             continue
         event_path = event_path[0]
         paths = [event_path, train_log_path, test_log_path, config_path] #, model_best]
+
         if all(os.path.exists(path) for path in paths):
-            exps.append(paths)
+            exp_name = f"{experiment}/{run}"
+            already_registered = mlflow.get_experiment_by_name(exp_name)
+            if already_registered:
+                old.append(exp_name)
+            else:
+                new.append(exp_name)
+                exps.append(paths)
+
+    print(f"Found {len(new)} new experiments.")
+    for exp in new:
+        print("\t{exp}")
+    print(f"With {len(old)} repeated experiments (already registered in mlflow):")
+    for exp in old:
+        print("\t{exp}")
+    print()
+
     return exps
 
 if __name__ == "__main__":
-    base_path = "/mnt/c/Users/tex/Downloads/saved"
     base_path = "/root/saved"
-    exp_pattern = "01*"
+    exp_pattern = "*"
     exps = get_experiments(base_path, exp_pattern)
-
-    if len(exps) == 0:
-        print("No experiments found.")
-    else:
-        print(f"{len(exps)} experiments found.")
 
     mlflow.set_tracking_uri("http://autograd.live")
 
