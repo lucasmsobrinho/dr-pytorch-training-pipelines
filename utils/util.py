@@ -9,6 +9,7 @@ from pathlib import Path
 from itertools import repeat
 from collections import OrderedDict
 import torchvision
+from model.metric import weighted_kappa_cm
 
 def ensure_dir(dirname):
     dirname = Path(dirname)
@@ -80,7 +81,6 @@ class MetricTracker:
             output_class = int(pred[i].item())
             
             self.confusion_matrix[target_class, output_class] += 1
-            
 
     def init_confusion_matrix(self, num_classes):
         self.confusion_matrix = np.zeros((num_classes,num_classes), dtype=np.uint64)
@@ -91,9 +91,9 @@ class MetricTracker:
         recall = np.zeros(num_classes)
         for i in range(num_classes):
             if sum(self.confusion_matrix[:,i]) != 0:
-                precision[i] = self.confusion_matrix[i, i] / sum(self.confusion_matrix[:,i])
+                precision[i] = self.confusion_matrix[i, i] / self.confusion_matrix[:,i].sum()
             if sum(self.confusion_matrix[i,:]) != 0:
-                recall[i] =  self.confusion_matrix[i, i] / sum(self.confusion_matrix[i,:])
+                recall[i] =  self.confusion_matrix[i, i] / self.confusion_matrix[i,:].sum()
 
         avg_precision = sum(precision) / num_classes
         avg_recall = sum(recall) / num_classes
@@ -102,16 +102,36 @@ class MetricTracker:
         else:
             f1_score = 2 * avg_recall * avg_precision / (avg_recall + avg_precision)
 
-        self._data.loc['precision'] = [0,0,0]
-        self._data.loc['precision', 'total'] = sum(precision)            
-        self._data.loc['precision', 'counts'] = num_classes
-        self._data.loc['precision', 'average'] = avg_precision
-        self._data.loc['recall'] = [0,0,0]
-        self._data.loc['recall', 'total'] = sum(recall)            
-        self._data.loc['recall', 'counts'] = num_classes            
-        self._data.loc['recall', 'average'] = avg_recall
-        self._data.loc['f1_score'] = [0,0,0]
-        self._data.loc['f1_score', 'average'] = f1_score
+        self._data.loc['macro_precision'] = {'total': sum(precision),
+                                       'counts': num_classes,
+                                       'average': avg_precision}
+
+        self._data.loc['macro_recall'] = {'total': sum(recall),
+                                    'counts': num_classes,
+                                    'average': avg_recall}
+        
+        self._data.loc['f1_score'] = {'total': 0,
+                                      'counts': 0,
+                                      'average': f1_score}
+
+        self._data.loc['weighted_kappa'] = {'total': 0,
+                                      'counts': 0,
+                                      'average': weighted_kappa_cm(self.confusion_matrix)}
+
+        for i in range(num_classes):
+            true_positives = self.confusion_matrix[i,i]
+
+            counts_p = self.confusion_matrix[:,i].sum()
+            self._data.loc[f'precision_{i}'] = {'total': true_positives,
+                                                'counts': counts_p,
+                                                'average': precision[i]}
+        for i in range(num_classes):
+            true_positives = self.confusion_matrix[i,i]
+            counts_r = self.confusion_matrix[:,i].sum()
+            self._data.loc[f'recall_{i}'] = {'total': true_positives,
+                                              'counts': counts_r,
+                                              'average': recall[i]}
+
         
     def avg(self, key):
         return self._data.average[key]
