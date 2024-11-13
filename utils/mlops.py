@@ -5,9 +5,14 @@ import glob
 import os
 
 def get_experiments(base_path, exp_pattern):
+    # TODO: rename variables, because they are misleading.
+    #       Mlflow Experiments are a group of Runs, and
+    #       we are disregarding this difference in this script.
     exps = []
     old = []
     new = []
+    register = mlflow.search_runs() # dataframe with existing runs
+
     test_paths = glob.glob(f"{base_path}/log/{exp_pattern}/*/test.log")
     for test_log_path in test_paths:
         experiment, run = test_log_path.split("/")[-3:-1]
@@ -22,19 +27,20 @@ def get_experiments(base_path, exp_pattern):
 
         if all(os.path.exists(path) for path in paths):
             exp_name = f"{experiment}/{run}"
-            already_registered = mlflow.get_experiment_by_name(exp_name)
-            if already_registered:
-                old.append(exp_name)
-            else:
+            new_run = register.loc[lambda df: df["tags.mlflow.runName"]==exp_name].empty
+
+            if new_run:
                 new.append(exp_name)
                 exps.append(paths)
+            else:
+                old.append(exp_name)
 
     print(f"Found {len(new)} new experiments.")
     for exp in new:
-        print("\t{exp}")
+        print(f"\t{exp}")
     print(f"With {len(old)} repeated experiments (already registered in mlflow):")
     for exp in old:
-        print("\t{exp}")
+        print(f"\t{exp}")
     print()
 
     return exps
@@ -50,13 +56,24 @@ if __name__ == "__main__":
         experiment, run = config_path.split('/')[-3:-1]
 
         try:
-            mlflow.log_artifact(train_log_path, "log")
-            mlflow.log_artifact(test_log_path, "log")
+            # TODO: register test metrics
+            with open(test_log_path) as f:
+                test_file = f.read()
+            
+            # TODO: best_valid metrics
+            with open(train_log_path) as f:
+                train_file = f.read()
+
             # load config.json
             with open(config_path) as f:
                 config = json.load(f)
 
+            if mlflow.active_run() is not None:
+                    mlflow.end_run()
+
             with mlflow.start_run(run_name=f"{experiment}/{run}"):
+                mlflow.log_artifact(train_log_path, "log")
+                mlflow.log_artifact(test_log_path, "log")
                 # load config file
                 for main_key, value in config.items():
                     if type(value) == dict:
@@ -70,7 +87,7 @@ if __name__ == "__main__":
                     else:
                         mlflow.log_param(main_key, value)
 
-                # load metrics from tensorboard
+                # load train/valid metrics from tensorboard
                 ea = event_accumulator.EventAccumulator(event_path)
                 ea.Reload()
                 for tag in ea.Tags()['scalars']:
@@ -79,7 +96,7 @@ if __name__ == "__main__":
                     for e in events:
                         # Log each metric from TensorBoard to MLflowea
                         mlflow.log_metric(tag, e.value, step=e.step)
-
+                mlflow.end_run(run_name=f"{experiment}/{run}")
 
         except Exception as e:
             print(e)
