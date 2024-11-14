@@ -91,23 +91,10 @@ if __name__ == "__main__":
             with open(test_log_path) as f:
                 test_log = f.read()
 
-            pattern = r"'loss': ([\d.]+), 'accuracy': ([\d.]+)"
-            match = re.search(pattern, test_log)
-            if match:
-                loss = float(match.group(1))
-                acc = float(match.group(2))
-                mlflow.log_metric('loss/test', loss)
-                mlflow.log_metric('acc/test', acc)
-            else:
-                print("No match in test.log found.")
 
             # TODO: best_valid metrics
             with open(train_log_path) as f:
                 train_log = f.read()
-
-            best_valid = parse_best_train_log(train_log)
-            mlflow.log_metric('loss/valid/best', loss)
-            mlflow.log_metric('acc/valid/best', acc)
 
             # load config.json
             with open(config_path) as f:
@@ -117,6 +104,23 @@ if __name__ == "__main__":
                     mlflow.end_run()
 
             with mlflow.start_run(run_name=f"{experiment}/{run}"):
+                # register test metrics
+                pattern = r"'loss': ([\d.]+), 'accuracy': ([\d.]+)"
+                match = re.search(pattern, test_log)
+                if match:
+                    loss = float(match.group(1))
+                    acc = float(match.group(2))
+                    mlflow.log_metric('loss/test', loss)
+                    mlflow.log_metric('acc/test', acc)
+                else:
+                    print("No match in test.log found.")
+
+                # register best valid metrics
+                best_valid = parse_best_train_log(train_log)
+                mlflow.log_metric('loss/valid/best', train_log['val_loss'])
+                mlflow.log_metric('acc/valid/best', train_log['val_acc'])
+                
+                # register log files
                 mlflow.log_artifact(train_log_path, "log")
                 mlflow.log_artifact(test_log_path, "log")
                 # load config file
