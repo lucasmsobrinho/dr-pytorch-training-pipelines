@@ -3,6 +3,38 @@ from tensorboard.backend.event_processing import event_accumulator
 import json
 import glob
 import os
+import re
+
+def parse_best_train_log(train_log):
+    epoch_pattern = r"epoch\s+:\s+(\d+).*?loss\s+:\s+([\d.]+).*?loss\s+:\s+([\d.]+).*?val_loss\s+:\s+([\d.]+).*?val_accuracy\s+:\s+([\d.]+).*?val_precision\s+:\s+([\d.]+).*?val_recall\s+:\s+([\d.]+).*?val_f1_score\s+:\s+([\d.]+)"
+
+    # Extract all matches in the form of (epoch, loss, accuracy, val_loss, val_accuracy, val_precision, val_recall, val_f1_score)
+    matches = re.findall(epoch_pattern, train_log, re.DOTALL)
+
+    # Initialize variables to keep track of the minimum validation loss and corresponding metrics
+    min_val_loss = float("inf")
+    best_epoch_metrics = None
+
+    # Iterate over all matches to find the epoch with the lowest val_loss
+    for match in matches:
+        epoch, loss, accuracy, val_loss, val_accuracy, val_precision, val_recall, val_f1_score = match
+        val_loss = float(val_loss)
+
+        # Update the best metrics if the current val_loss is the lowest so far
+        if val_loss < min_val_loss:
+            min_val_loss = val_loss
+            best_epoch_metrics = {
+                "epoch": int(epoch),
+                "loss": float(loss),
+                "accuracy": float(accuracy),
+                "val_loss": val_loss,
+                "val_accuracy": float(val_accuracy),
+                "val_precision": float(val_precision),
+                "val_recall": float(val_recall),
+                "val_f1_score": float(val_f1_score),
+            }
+    return best_epoch_metrics
+
 
 def get_experiments(base_path, exp_pattern):
     # TODO: rename variables, because they are misleading.
@@ -54,15 +86,28 @@ if __name__ == "__main__":
 
     for event_path, train_log_path, test_log_path, config_path in exps:
         experiment, run = config_path.split('/')[-3:-1]
-
         try:
             # TODO: register test metrics
             with open(test_log_path) as f:
-                test_file = f.read()
-            
+                test_log = f.read()
+
+            pattern = r"'loss': ([\d.]+), 'accuracy': ([\d.]+)"
+            match = re.search(pattern, test_log)
+            if match:
+                loss = float(match.group(1))
+                acc = float(match.group(2))
+                mlflow.log_metric('loss/test', loss)
+                mlflow.log_metric('acc/test', acc)
+            else:
+                print("No match in test.log found.")
+
             # TODO: best_valid metrics
             with open(train_log_path) as f:
-                train_file = f.read()
+                train_log = f.read()
+
+            best_valid = parse_best_train_log(train_log)
+            mlflow.log_metric('loss/valid/best', loss)
+            mlflow.log_metric('acc/valid/best', acc)
 
             # load config.json
             with open(config_path) as f:
@@ -96,7 +141,7 @@ if __name__ == "__main__":
                     for e in events:
                         # Log each metric from TensorBoard to MLflowea
                         mlflow.log_metric(tag, e.value, step=e.step)
-                mlflow.end_run(run_name=f"{experiment}/{run}")
+                mlflow.end_run()
 
         except Exception as e:
             print(e)
