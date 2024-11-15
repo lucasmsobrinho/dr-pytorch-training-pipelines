@@ -73,11 +73,17 @@ def main(config):
     trainable_params = filter(lambda p: p.requires_grad, model.parameters())
     optimizer = config.init_obj('optimizer', torch.optim, trainable_params)
     lr_scheduler = config.init_obj('lr_scheduler', torch.optim.lr_scheduler, optimizer)
+    
+    if 'writer_step' in config.config:
+        writer_step = config['writer_step']
+    else:
+        writer_step = 'epoch'
 
     trainer = Trainer(model, criterion, metrics, optimizer,
                       config=config,
                       device=device,
                       data_loader=data_loader,
+                      writer_step=writer_step,
                       valid_data_loader=valid_data_loader,
                       lr_scheduler=lr_scheduler)
     trainer.train()

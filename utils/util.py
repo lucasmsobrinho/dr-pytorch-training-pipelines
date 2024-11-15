@@ -10,6 +10,10 @@ from itertools import repeat
 from collections import OrderedDict
 import torchvision
 from model.metric import weighted_kappa_cm
+from sklearn.metrics import ConfusionMatrixDisplay
+import matplotlib.pyplot as plt
+from torchvision import transforms
+
 
 def ensure_dir(dirname):
     dirname = Path(dirname)
@@ -149,3 +153,32 @@ def compute_dataset_metrics(paths):
     avg /= len(paths)
     std /= len(paths)
     return avg, std
+
+
+def plot_confusion_matrix(cm, display_labels=None,
+                          normalize=True,
+                          title='Train Confusion matrix',
+                          cmap='Blues'):
+    
+    cm_to_display = cm/cm.sum(1) if normalize else cm
+    if display_labels is None:
+        display_labels = np.arange(cm.shape[0])
+    disp = ConfusionMatrixDisplay(confusion_matrix=cm_to_display, display_labels=display_labels)
+
+    # Plot confusion matrix
+    fig, ax = plt.subplots(figsize=(8, 8))
+    disp.plot(ax=ax, cmap=cmap, values_format='.03f')
+
+    # Add precision and recall
+    precision = [col[i]/col.sum() for i, col in enumerate(cm)]
+    recall = [col[i]/col.sum() for i, col in enumerate(cm)]
+    support = cm.sum(1)
+    for i, label in enumerate(disp.display_labels):
+        ax.text(i, len(disp.display_labels), f"Prec: {precision[i]:.2f}\nRec: {recall[i]:.2f}\nSup: {support[i]}",
+                ha='center', va='top', fontsize=10)
+
+    plt.title(title)
+    fig.canvas.draw()  # Render the figure
+    image = np.frombuffer(fig.canvas.tostring_rgb(), dtype=np.uint8)
+    image = image.reshape(fig.canvas.get_width_height()[::-1] + (3,))
+    return transforms.ToTensor()(np.array(image))
