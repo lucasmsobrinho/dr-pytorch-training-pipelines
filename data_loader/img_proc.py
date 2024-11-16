@@ -44,26 +44,47 @@ def mask_outer(img, img_size=512):
     return base*img + (1-base)*.5
 
 
-def adjust_radius_center(img, img_size=512):
-    g = img[1]
-    thresh = g.mean()/10
+def adjust_radius_center(image, img_size=512, scale_factor=4):
+    '''
+        This function resize the image to a small one with scale_factor
+        in order to save processing and time.
+        Then, it runs Hough Circles to find the best circle that represent the 
+        retina image.
+        Finally, it scale and crop down to the new dimension img_size x img_size
+    '''
+    # Scale down
+    small = transforms.Resize((image.shape[1]//scale_factor, image.shape[2]//scale_factor))(image)
+    gray = small[1].cpu().numpy()
 
-    x_fg = (g > thresh).sum(1)
-    x = x_fg.shape[0]
-    x_center = (x_fg.argmax().item() + x - x_fg.flip(0).argmax().item())//2
+    # Perform Hough Circle Transform
+    circles = cv2.HoughCircles(
+        gray,
+        cv2.HOUGH_GRADIENT,
+        dp=1.2,       # Inverse ratio of the accumulator resolution
+        minDist=100,   # Minimum distance between detected centers
+        param1=50,    # Higher threshold for the Canny edge detector
+        param2=30,    # Threshold for center detection
+        minRadius=int(min(gray.shape)*0.4), # Minimum circle radius
+        maxRadius=max(gray.shape)//2 # Maximum circle radius
+    )
 
-    y_fg = (g > thresh).sum(0)
-    y = y_fg.shape[0]
-    y_center = (y_fg.argmax().item() + y - y_fg.flip(0).argmax().item())//2
+    if circles is not None:
+        circles = np.round(circles[0, :]).astype("int")
+        xc, yc, r = circles[:1][0]
 
-    r = min(y_fg.max(), x_fg.max())
+    # get reescaled circle
+    xc *= scale_factor
+    yc *= scale_factor
+    r *= scale_factor
 
-    scale = img_size/(r)
+    # Display the result
+    scale = img_size/(2*r)
+    c, y, x = image.shape
+    dx = (x//2 - xc) * scale
+    dy = (y//2 - yc) * scale
+    translate = [dx, dy]
 
-    dx = (x//2 - x_center) * scale
-    dy = (y//2 - y_center) * scale
-    translate = [dy, dx]
-    return transforms.functional.affine(img, scale=scale, translate=translate, angle=0, shear=0)
+    return transforms.functional.affine(image, scale=scale, translate=translate, angle=0, shear=0)
 
 
 # transformations utils

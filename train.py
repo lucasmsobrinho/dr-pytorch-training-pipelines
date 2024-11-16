@@ -79,6 +79,10 @@ def main(config):
     else:
         writer_step = 'epoch'
 
+    if 'unfreeze' in config.config:
+        print("Unfreezing Convolutional layers!")
+        model.unfreeze_cnn()
+
     trainer = Trainer(model, criterion, metrics, optimizer,
                       config=config,
                       device=device,
@@ -102,7 +106,8 @@ if __name__ == '__main__':
     CustomArgs = collections.namedtuple('CustomArgs', 'flags type target')
     options = [
         CustomArgs(['--lr', '--learning_rate'], type=float, target='optimizer;args;lr'),
-        CustomArgs(['--bs', '--batch_size'], type=int, target='data_loader;args;batch_size')
+        CustomArgs(['--bs', '--batch_size'], type=int, target='data_loader;args;batch_size'),
+        CustomArgs(['--uf', '--unfreeze'], type=bool, target='unfreeze')
     ]
     config = ConfigParser.from_args(args, options)
     main(config)
