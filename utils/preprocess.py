@@ -11,6 +11,15 @@ import functools
 import argparse
 
 
+def get_device():
+    """Get the device to use for computations (CUDA or MPS if available, else CPU)"""
+    if torch.cuda.is_available():
+        return torch.device('cuda')
+    elif torch.backends.mps.is_available():
+        return torch.device('mps') 
+    return torch.device('cpu')
+device = get_device()
+
 class CutomLambda(torchvision.transforms.Lambda):
     """
         Lambda Class that accept parameters
@@ -74,7 +83,7 @@ def mask_outer(img, img_size=512):
             radius = int(0.9*img_size/2),
             color = (1, 1, 1),
             thickness = -1)
-    base = torch.tensor(base).permute(2,0,1).to('cuda')
+    base = torch.tensor(base).permute(2,0,1).to(device)
     return base*img + (1-base)*.5
 
 
@@ -145,7 +154,7 @@ def transform_jabbar(img_size=512):
         transforms.Lambda(green_channel),
         transforms.Lambda(CLAHE), # overhead because cv2 operates on CPU
         transforms.ToTensor(),
-        transforms.Lambda(lambda x: x.to('cuda')),
+        transforms.Lambda(lambda x: x.to(device)),
         transforms.GaussianBlur((5,5)),
         transforms.ConvertImageDtype(torch.uint8),
         transforms.Lambda(lambda x: x.repeat(3,1,1)),
@@ -167,7 +176,7 @@ def process(df, proc_name="vanilla", img_size=256, input_folder="./train", outpu
             print(f"{idx}/{df.name.shape[0]}, {img_name}, {output_folder}/{img_name}.jpeg")
 
         if(not os.path.exists(f"{output_folder}/{img_name}.jpeg")):
-            img = torchvision.io.read_image(f"{input_folder}/{img_name}.jpeg").to('cuda')
+            img = torchvision.io.read_image(f"{input_folder}/{img_name}.jpeg").to(device)
             proc = transform(img)
             torchvision.io.write_jpeg(proc, f"{output_folder}/{img_name}.jpeg", 100)
 
@@ -218,7 +227,7 @@ if __name__=="__main__":
                                 input_folder=input_folder, 
                                 output_folder=output_folder)
 
-    df = pd.read_csv(labels_path, header=None, names=["name", "label"])
+    df = pd.read_csv(labels_path, header=1, names=["name", "level"])
 
     chunk_size = len(df)//pool_size
     chunk_limit = [chunk_size*i for i in range(pool_size+1)]
