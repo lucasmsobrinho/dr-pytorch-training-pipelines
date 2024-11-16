@@ -54,7 +54,11 @@ class VGG_Jabbar(nn.Module):
             nn.Dropout(p=self.p_dropout, inplace=False),
             nn.Linear(in_features=hidden_size, out_features=num_classes, bias=True)
         )
-        
+
+    def unfreeze_cnn(self):
+        for parameter in self.vgg.features.parameters():
+            parameter.requires_grad = True
+
     def forward(self, x):
         x = self.vgg(x)
         return x
