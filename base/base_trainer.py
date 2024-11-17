@@ -163,10 +163,14 @@ class BaseTrainer:
         self.model.load_state_dict(checkpoint['state_dict'])
 
         # load optimizer state from checkpoint only when optimizer type is not changed.
-        if checkpoint['config']['optimizer']['type'] != self.config['optimizer']['type']:
-            self.logger.warning("Warning: Optimizer type given in config file is different from that of checkpoint. "
-                                "Optimizer parameters not being resumed.")
+        if checkpoint['config']['arch']['args']['freeze_cnn'] != self.config['unfreeze']:
+            if checkpoint['config']['optimizer']['type'] != self.config['optimizer']['type']:
+                self.logger.warning("Warning: Optimizer type given in config file is different from that of checkpoint. "
+                                    "Optimizer parameters not being resumed.")
+            else:
+                self.optimizer.load_state_dict(checkpoint['optimizer'])
         else:
-            self.optimizer.load_state_dict(checkpoint['optimizer'])
+            self.logger.warning("Warning: Unfreeze flag given in config file is different from that of checkpoint. "
+                                "Optimizer parameters not being resumed.")
 
         self.logger.info("Checkpoint loaded. Resume training from epoch {}".format(self.start_epoch))

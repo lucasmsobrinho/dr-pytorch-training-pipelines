@@ -70,18 +70,18 @@ def main(config):
     metrics = [getattr(module_metric, met) for met in config['metrics']]
 
     # build optimizer, learning rate scheduler. delete every lines containing lr_scheduler for disabling scheduler
+    if 'unfreeze' in config.config:
+        print("Unfreezing Convolutional layers!")
+        model.unfreeze_cnn()
+
     trainable_params = filter(lambda p: p.requires_grad, model.parameters())
     optimizer = config.init_obj('optimizer', torch.optim, trainable_params)
     lr_scheduler = config.init_obj('lr_scheduler', torch.optim.lr_scheduler, optimizer)
-    
+
     if 'writer_step' in config.config:
         writer_step = config['writer_step']
     else:
         writer_step = 'epoch'
-
-    if 'unfreeze' in config.config:
-        print("Unfreezing Convolutional layers!")
-        model.unfreeze_cnn()
 
     trainer = Trainer(model, criterion, metrics, optimizer,
                       config=config,
