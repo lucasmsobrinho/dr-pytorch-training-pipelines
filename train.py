@@ -27,11 +27,16 @@ def main(config):
     preprocess = config.init_obj('preprocess', module_proc)
     augmentation = config.init_obj('augmentation', module_proc)
 
-    #train_proc = transforms.Compose([preprocess, augmentation])
-    #valid_proc = transforms.Compose([preprocess, augmentation])
 
-    # should training time augmentation be applied to valid_set (?)
-    train_set = config.init_obj('train_set', module_data, transform=preprocess)
+    if preprocess and augmentation:
+        train_proc = transforms.Compose([preprocess, augmentation])
+    elif preprocess:
+        train_proc = preprocess
+    elif augmentation:
+        train_proc = augmentation
+
+    # should not apply augmentation on validation set
+    train_set = config.init_obj('train_set', module_data, transform=train_proc)
     valid_set = config.init_obj('valid_set', module_data, transform=preprocess)
 
     data_loader = config.init_obj('data_loader', module_loader, dataset=train_set)
@@ -82,6 +87,12 @@ def main(config):
         writer_step = config['writer_step']
     else:
         writer_step = 'epoch'
+
+    if 'register_img_batch' in config.config:
+        register_img_batch = config['register_img_batch']
+    else:
+        register_img_batch = False
+        
 
     trainer = Trainer(model, criterion, metrics, optimizer,
                       config=config,

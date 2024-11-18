@@ -32,7 +32,7 @@ class Trainer(BaseTrainer):
         self.writer_step = writer_step # 'batch' or 'epoch'
 
         # Every MetricTracker Update is registered using writer
-        metric_writer = self.writer if self.writer_step=='step' else None
+        metric_writer = self.writer if self.writer_step=='batch' else None
 
         self.train_metrics = MetricTracker('loss', 'lr', *[m.__name__ for m in self.metric_ftns], writer=metric_writer)
         self.valid_metrics = MetricTracker('loss', 'lr', *[m.__name__ for m in self.metric_ftns], writer=metric_writer)
@@ -64,7 +64,7 @@ class Trainer(BaseTrainer):
                 if type(self.lr_scheduler).__name__ in ["CyclicLR"]:
                     self.lr_scheduler.step()
 
-            if self.writer_step == 'step':
+            if self.writer_step == 'batch':
                 self.writer.set_step((epoch - 1) * self.len_epoch + batch_idx)
             else:
                 self.writer.set_step(epoch-1)
@@ -85,8 +85,8 @@ class Trainer(BaseTrainer):
                     self._progress(batch_idx),
                     loss.item()))
 
-            if self.register_img_batch and (self.writer_step=='step') and (batch_idx % self.img_step == 0):
-                self.writer.add_image('input', make_grid(data.cpu(), nrow=8, normalize=True))
+            if self.register_img_batch and (self.writer_step=='batch') and (batch_idx % self.img_step == 0):
+                self.writer.add_image('input', make_grid(data.cpu()[:16], nrow=8, normalize=True))
 
             if batch_idx == self.len_epoch:
                 break
@@ -94,7 +94,7 @@ class Trainer(BaseTrainer):
         self.train_metrics.get_other_metrics()
         log = self.train_metrics.result()
 
-        if self.register_img_batch and (self.writer_step=='batch'):
+        if self.register_img_batch and (self.writer_step=='epoch'):
             self.writer.add_image('input', make_grid(data.cpu(), nrow=8, normalize=True))
 
         if self.writer_step == 'epoch':
@@ -142,7 +142,7 @@ class Trainer(BaseTrainer):
                 output = self.model(data)
                 loss = self.criterion(output, target)
 
-                if self.writer_step == 'step':
+                if self.writer_step == 'batch':
                     self.writer.set_step((epoch - 1) * len(self.valid_data_loader) + batch_idx, 'valid')
                 else:
                     self.writer.set_step(epoch-1, 'valid')
