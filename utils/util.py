@@ -131,7 +131,7 @@ class MetricTracker:
                                                 'average': precision[i]}
         for i in range(num_classes):
             true_positives = self.confusion_matrix[i,i]
-            counts_r = self.confusion_matrix[:,i].sum()
+            counts_r = self.confusion_matrix[i,:].sum()
             self._data.loc[f'recall_{i}'] = {'total': true_positives,
                                               'counts': counts_r,
                                               'average': recall[i]}
@@ -171,7 +171,7 @@ def plot_confusion_matrix(cm, display_labels=None,
 
     # Add precision and recall
     precision = [col[i]/col.sum() for i, col in enumerate(cm)]
-    recall = [col[i]/col.sum() for i, col in enumerate(cm)]
+    recall = [row[i]/row.sum() for i, row in enumerate(cm)]
     support = cm.sum(1)
     for i, label in enumerate(disp.display_labels):
         ax.text(i, len(disp.display_labels), f"Prec: {precision[i]:.2f}\nRec: {recall[i]:.2f}\nSup: {support[i]}",
