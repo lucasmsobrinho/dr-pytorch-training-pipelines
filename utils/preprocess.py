@@ -20,6 +20,9 @@ def get_device():
     return torch.device('cpu')
 device = get_device()
 
+class NoCircleException(Exception):
+    pass
+
 class CutomLambda(torchvision.transforms.Lambda):
     """
         Lambda Class that accept parameters
@@ -106,7 +109,7 @@ def adjust_radius_center(image, img_size=512, scale_factor=4):
     '''
     # Scale down
     small = transforms.Resize((image.shape[1]//scale_factor, image.shape[2]//scale_factor))(image)
-    gray = small[1].cpu().numpy()
+    gray = small[1].cpu().numpy().astype(np.uint8)
 
     # Perform Hough Circle Transform
     circles = cv2.HoughCircles(
@@ -123,6 +126,8 @@ def adjust_radius_center(image, img_size=512, scale_factor=4):
     if circles is not None:
         circles = np.round(circles[0, :]).astype("int")
         xc, yc, r = circles[:1][0]
+    else:
+        raise NoCircleException("No circles found")
 
     # get reescaled circle
     xc *= scale_factor
@@ -138,6 +143,34 @@ def adjust_radius_center(image, img_size=512, scale_factor=4):
 
     return transforms.functional.affine(image, scale=scale, translate=translate, angle=0, shear=0)
 
+def local_avg_and_mask(img, img_size=512, retention=0.9):
+    img = torchvision.io.read_image(path)
+
+    img = transforms.ConvertImageDtype(torch.float32)(img)
+    mask = (img[1]>10/255).numpy().astype(np.uint8)
+    mask_y = mask.sum(1)
+
+    bounds = np.where(mask_y > 0)[0]
+    mask_top = bounds[0]
+    mask_bottom = bounds[-1]
+
+    base = np.zeros((img_size, img_size), dtype=np.float32)
+    cv2.circle(base,
+            center = (img_size//2, img_size//2),
+            radius = int(retention*img_size/2),
+            color = (1,1,1),
+            thickness = -1)
+
+    d = int((img_size/2)*(1-retention))
+    base[:mask_top+d,:] = 0.0
+    base[mask_bottom-d:,:] = 0.0
+
+    k = 51
+    s = img_size/30
+    out = torch.clip(0.5 + 3*(img-transforms.GaussianBlur((k,k), sigma=s)(img)), 0, 1)
+
+    show(out*base, path, True)
+
 
 def transform_vanilla(img_size=512):
     return transforms.Compose([
@@ -148,7 +181,6 @@ def transform_vanilla(img_size=512):
 
 def transform_scale_and_crop(img_size=512):
     return transforms.Compose([
-        transforms.ConvertImageDtype(torch.float32),
         CutomLambda(adjust_radius_center, img_size=img_size),
         transforms.CenterCrop(img_size),
         transforms.ConvertImageDtype(torch.uint8),
@@ -159,10 +191,15 @@ def transform_scale_and_crop(img_size=512):
 def transform_kaggle(img_size=512):
     return transforms.Compose([
         transforms.ConvertImageDtype(torch.float32),
-        CutomLambda(adjust_radius_center, img_size=img_size),
-        transforms.CenterCrop(img_size),
-        CutomLambda(subtract_local_avg_color, img_size=img_size),
-        CutomLambda(mask_outer, img_size=img_size),
+        CutomLambda(local_avg_and_mask, img_size=img_size),
+        transforms.ConvertImageDtype(torch.uint8),
+        CutomLambda(lambda x: x.to('cpu')),
+    ])
+
+def transform_kaggle_pre_scaled(img_size):
+    return transforms.Compose([
+        transforms.ConvertImageDtype(torch.float32),
+        CutomLambda(local_avg_and_mask, img_size=img_size),
         transforms.ConvertImageDtype(torch.uint8),
         CutomLambda(lambda x: x.to('cpu')),
     ])
@@ -198,8 +235,11 @@ def process(df, proc_name="vanilla", img_size=256, input_folder="./train", outpu
 
         if(not os.path.exists(f"{output_folder}/{img_name}.jpeg")):
             img = torchvision.io.read_image(f"{input_folder}/{img_name}.jpeg").to(device)
-            proc = transform(img)
-            torchvision.io.write_jpeg(proc, f"{output_folder}/{img_name}.jpeg", 100)
+            try:
+                proc = transform(img)
+                torchvision.io.write_jpeg(proc, f"{output_folder}/{img_name}.jpeg", 100)
+            except NoCircleException as e:
+                print(img_name)
 
 
 def get_proc(name, img_size):
@@ -208,18 +248,20 @@ def get_proc(name, img_size):
         "vanilla": transform_vanilla(img_size),
         "scale_crop": transform_scale_and_crop(img_size),
         "kaggle": transform_kaggle(img_size),
+        "kaggle_pre_scaled": transform_kaggle_pre_scaled(img_size),
         "jabbar": transform_jabbar(img_size),
     }
     return proc_map[name]
 
 
 if __name__=="__main__":
+    multiprocessing.set_start_method("spawn")
     parser = argparse.ArgumentParser(
         description="Preprocessing pipeline for image datasets"
     )
 
     parser.add_argument('-p', '--proc_name', default="vanilla", type=str,
-                      choices=("vanilla", "scale_crop", "kaggle", "jabbar"),
+                      choices=("vanilla", "scale_crop", "kaggle", "kaggle_pre_scaled", "jabbar"),
                       help='config file path (default: "vanilla")')
     parser.add_argument('-l', '--labels_path', default="./sample.csv", type=str,
                       help='config file path (default: "./sample.csv")')
@@ -250,12 +292,16 @@ if __name__=="__main__":
 
     df = pd.read_csv(labels_path, header=1, names=["name", "level"])
 
-    chunk_size = len(df)//pool_size
-    chunk_limit = [chunk_size*i for i in range(pool_size+1)]
-    chunk_limit[-1] = len(df)+1
-    print(len(df))
-    print(chunk_limit)
-    df_chunks = [df[chunk_limit[i]:chunk_limit[i+1]] for i in range(pool_size)]
 
-    with multiprocessing.Pool(pool_size) as p:
-        p.map(_process, df_chunks)
+    if pool_size > 1 :
+        print(f"{pool_size=}, {len(df)=}")
+        chunk_size = len(df)//pool_size
+        chunk_limit = [chunk_size*i for i in range(pool_size+1)]
+        chunk_limit[-1] = len(df)+1
+        print(f"{chunk_limit=}")
+        df_chunks = [df[chunk_limit[i]:chunk_limit[i+1]] for i in range(pool_size)]
+
+        with multiprocessing.Pool(pool_size) as p:
+            p.map(_process, df_chunks)
+    else:
+        _preprocess(df)
