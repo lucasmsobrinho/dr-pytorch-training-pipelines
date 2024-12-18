@@ -3,7 +3,6 @@ import torch.nn as nn
 import torch.nn.functional as F
 from torchvision import models
 
-
 class MnistModel(nn.Module):
     def __init__(self, num_classes=10):
         super().__init__()
@@ -24,7 +23,7 @@ class MnistModel(nn.Module):
         return F.log_softmax(x, dim=1)
 
 class VGG_Jabbar(nn.Module):
-    def __init__(self, num_classes=5, bn=True, freeze_cnn=False, pretrained=False, hidden_size=1024, p_dropout=0.5):
+    def __init__(self, num_classes=5, bn=True, freeze_cnn=False, pretrained=False, hidden_size=1024, p_dropout=0.5, bn_momentum=0.1):
         super().__init__()
         self.num_classes = num_classes
         self.hidden_size = hidden_size
@@ -33,13 +32,19 @@ class VGG_Jabbar(nn.Module):
         weights = "DEFAULT" if pretrained else None
         self.vgg = models.vgg16_bn(weights) if bn else models.vgg16(weights)
 
+        if bn:
+            for m in self.vgg.modules():
+                if isinstance(m, torch.nn.BatchNorm2d):
+                    m.momentum = bn_momentum 
+
         # freeze feature extraction layers
         if freeze_cnn:
             for parameter in self.vgg.features.parameters():
                 parameter.requires_grad = False
 
         # Replace final layers
-        if not torch.cuda.is_available():
+        USEMPS = False
+        if not torch.cuda.is_available() and USEMPS:
             self.vgg.avgpool = nn.AdaptiveAvgPool2d(8)
             cnn_out_features = 512 * 8 * 8
         else:
@@ -105,3 +110,14 @@ class ConvNeXt(nn.Module):
     def forward(self, x):
         x = self.convnext(x)
         return x
+
+import timm
+
+class ViT(nn.Module):
+    def __init__(self, num_classes=2, pretrained=True, freeze_cnn=False):
+        super(ViT, self).__init__()
+        self.num_classes = num_classes
+        self.vit = timm.create_model('vit_base_patch16_224', pretrained=pretrained, num_classes=num_classes)
+
+    def forward(self, x):
+        return self.vit(x)

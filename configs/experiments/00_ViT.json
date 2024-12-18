@@ -1,0 +1,83 @@
+{
+    "name": "00_ViT",
+    "n_gpu": 1,
+
+    "arch": {
+        "type": "ViT",
+        "args": {
+            "num_classes": 2,
+            "freeze_cnn": false,
+	        "pretrained": true
+        }
+    },
+
+    "preprocess": {
+        "type": "preprocess_vit",
+        "args": {
+        }
+    },
+    "augmentation": {
+        "type": "none",
+        "args": {
+        }
+    },
+    "train_set": {
+        "type": "EyePacsDataset",
+        "args": {
+            "annotations_file": "binary_train_labels.csv",
+            "img_dir": "/Users/ayameira/Projects/dr-pytorch-training-pipelines/data/diabetic-retinopathy-detection/train"
+        }
+    },
+    "valid_set": {
+        "type": "EyePacsDataset",
+        "args": {
+            "annotations_file": "binary_valid_labels.csv",
+            "img_dir": "/Users/ayameira/Projects/dr-pytorch-training-pipelines/data/diabetic-retinopathy-detection/train"
+        }
+    },
+    "test_set": {
+        "type": "EyePacsDataset",
+        "args": {
+            "annotations_file": "binary_test_labels.csv",
+            "img_dir": "/Users/ayameira/Projects/dr-pytorch-training-pipelines/data/diabetic-retinopathy-detection/test"
+        }
+    },
+    "data_loader": {
+        "type": "EyePacsDataLoader",
+        "args":{
+            "batch_size": 32,
+            "shuffle": true,
+            "num_workers": 4
+        }
+    },
+
+    "optimizer": {
+        "type": "Adam",
+        "args":{
+            "lr": 0.0001
+        }
+    },
+    "loss": "cross_entropy_loss",
+
+    "metrics": [
+        "accuracy"
+    ],
+    "lr_scheduler": {
+        "type": "ConstantLR",
+        "args": {
+            "total_iters": 1
+        }
+    },
+    "trainer": {
+        "epochs": 50,
+
+        "save_dir": "saved/",
+        "save_period": 25, 
+        "verbosity": 2,
+
+        "monitor": "min val_loss",
+        "early_stop": 20,
+
+        "tensorboard": true
+    }
+}

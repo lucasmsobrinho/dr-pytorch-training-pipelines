@@ -3,6 +3,9 @@ data
 data/*
 .data
 
+# Results folder
+misclassified_images*/
+
 # mlflow tests
 mlruns/*
 
