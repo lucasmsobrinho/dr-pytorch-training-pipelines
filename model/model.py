@@ -114,10 +114,28 @@ class ConvNeXt(nn.Module):
 import timm
 
 class ViT(nn.Module):
-    def __init__(self, num_classes=2, pretrained=True, freeze_cnn=False):
+    def __init__(self, num_classes=2, pretrained=True, freeze_cnn=False, img_size=512):
         super(ViT, self).__init__()
         self.num_classes = num_classes
-        self.vit = timm.create_model('vit_base_patch16_224', pretrained=pretrained, num_classes=num_classes)
+        self.vit = timm.create_model('vit_base_patch16_224',
+                                      pretrained=pretrained, 
+                                      img_size=img_size,
+                                      num_classes=num_classes
+                                    )
 
     def forward(self, x):
         return self.vit(x)
+
+class SwinTransformer(nn.Module):
+    def __init__(self, num_classes=2, pretrained=True, freeze_cnn=False, img_size=512):
+        super().__init__()
+        self.num_classes = num_classes
+        self.swin = timm.create_model('swin_base_patch4_window7_224', 
+                                      pretrained=pretrained, 
+                                      img_size=img_size,
+                                      num_classes=num_classes
+                                    )
+
+    def forward(self, x):
+        x = self.swin(x)
+        return x

@@ -1,14 +1,14 @@
 {
-    "name": "00_ViT",
+    "name": "00_Swin",
     "n_gpu": 1,
 
     "arch": {
-        "type": "ViT",
+        "type": "SwinTransformer",
         "args": {
             "num_classes": 2,
             "freeze_cnn": false,
 	        "pretrained": true,
-            "img_size": 228
+            "img_size": 224
         }
     },
 
@@ -16,7 +16,7 @@
         "type": "preprocess_vit",
         "args": {
             "resize": true,
-            "img_size": 228
+            "img_size": 224
         }
     },
     "augmentation": {
