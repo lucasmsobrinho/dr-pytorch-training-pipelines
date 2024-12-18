@@ -96,9 +96,6 @@ def transform_scale_and_crop(img_size=512):
         transforms.CenterCrop(img_size),
     ])
 
-
-
-
 # preprocessing functions used in train and test
 def preprocess_eyepacs():
     return transforms.Compose([
@@ -126,11 +123,21 @@ def preprocess_cifar10(resize=False, img_size=224):
     ])
     return transforms.Compose(t_list)
 
-def preprocess_vit():
+def preprocess_vit(resize=False, img_size=224):
+    if resize:
+        return transforms.Compose([
+            transforms.Resize((img_size, img_size)),
+            transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]) # ImageNet mean and std
+        ])
+    else:
+        return transforms.Compose([
+            transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]) # ImageNet mean and std
+        ])
+
+def preprocess_swin(resize=False, img_size=224):
     return transforms.Compose([
         transforms.Resize((224, 224)),
-        #transforms.ToTensor(),
-        transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
+        transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]) # ImageNet mean and std
     ])
 
 def augmentation_cifar10():
