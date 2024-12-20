@@ -102,6 +102,18 @@ def preprocess_eyepacs():
         transforms.Normalize(mean=[0.4466, 0.3089, 0.2198], std=[0.2080, 0.1455, 0.1045])
     ])
 
+def preprocess_eyepacs_and_resize():
+    return transforms.Compose([
+        transforms.Resize((512,512)),
+        transforms.Normalize(mean=[0.4466, 0.3089, 0.2198], std=[0.2080, 0.1455, 0.1045])
+    ])
+
+
+def preprocess_resize(img_size):
+    return transforms.Compose([
+        transforms.Resize((img_size,img_size))
+    ])
+
 def preprocess_eyepacs_kaggle():
     return transforms.Compose([
         transforms.Normalize(mean=[0.5037, 0.5010, 0.5000], std=[0.0650, 0.0681, 0.0500])

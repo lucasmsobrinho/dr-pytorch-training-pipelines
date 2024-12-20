@@ -81,7 +81,89 @@ class VGG(nn.Module):
     def forward(self, x):
         x = self.vgg(x)
         return x
-    
+
+class DenseNet121(nn.Module):
+    def __init__(self, num_classes=5, bn=True, freeze_cnn=False, pretrained=False, hidden_size=1024, p_dropout=0.5):
+        super().__init__()
+        self.num_classes = num_classes
+        self.hidden_size = hidden_size
+        self.p_dropout = p_dropout
+
+        weights = "DEFAULT" if pretrained else None
+        self.densenet = models.densenet121(weights=weights)
+
+        # freeze feature extraction layers
+        if freeze_cnn:
+            for parameter in self.densenet.features.parameters():
+                parameter.requires_grad = False
+
+
+        self.densenet.classifier = nn.Linear(in_features=1024, out_features=num_classes, bias=True)
+
+    def unfreeze_cnn(self):
+        for parameter in self.densenet.features.parameters():
+            parameter.requires_grad = True
+
+    def forward(self, x):
+        x = self.densenet(x)
+        return x
+
+class DenseNet169(nn.Module):
+    def __init__(self, num_classes=5, bn=True, freeze_cnn=False, pretrained=False, hidden_size=1024, p_dropout=0.5):
+        super().__init__()
+        self.num_classes = num_classes
+        self.hidden_size = hidden_size
+        self.p_dropout = p_dropout
+
+        weights = "DEFAULT" if pretrained else None
+        self.densenet = models.densenet169(weights=weights)
+
+        # freeze feature extraction layers
+        if freeze_cnn:
+            for parameter in self.densenet.features.parameters():
+                parameter.requires_grad = False
+
+
+        self.densenet.classifier = nn.Linear(in_features=1664, out_features=num_classes, bias=True)
+
+    def unfreeze_cnn(self):
+        for parameter in self.densenet.features.parameters():
+            parameter.requires_grad = True
+
+    def forward(self, x):
+        x = self.densenet(x)
+        return x
+
+class Resnet50(nn.Module):
+    def __init__(self, num_classes=5, bn=True, freeze_cnn=False, pretrained=False, hidden_size=1024, p_dropout=0.5):
+        super().__init__()
+        self.num_classes = num_classes
+        self.hidden_size = hidden_size
+        self.p_dropout = p_dropout
+
+        weights = "DEFAULT" if pretrained else None
+        self.resnet = models.resnet50(weights=weights)
+
+        self.resnet.fc = nn.Linear(in_features=2048, out_features=num_classes, bias=True)
+
+        # freeze feature extraction layers
+        if freeze_cnn:
+            for parameter in self.resnet.parameters():
+                parameter.requires_grad = False
+        
+        for parameter in self.resnet.fc.parameters():
+            parameter.requires_grad = True
+
+        
+
+    def unfreeze_cnn(self):
+        for parameter in self.resnet.parameters():
+            parameter.requires_grad = True
+
+    def forward(self, x):
+        x = self.resnet(x)
+        return x
+
 class ResNet(nn.Module):
     def __init__(self, num_classes=1000):
         super().__init__()
